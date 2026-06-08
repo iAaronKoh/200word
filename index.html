@@ -776,6 +776,7 @@ body {
 }
 </style>
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -940,76 +941,121 @@ body {
 <script>
 // ===== 全局数据 =====
 let VOCAB_DATA = null;
+let ALL_WORDS = []; // 扁平化的所有单词（示例词+扩展词）
 
-// ===== 加载逻辑（参考 index.html 实现） =====
+// ===== 加载逻辑 =====
 async function loadVocabData() {
     showLoading();
     try {
         const response = await fetch('./vocab_data.json');
-        if (!response.ok) {
-            throw new Error('HTTP ' + response.status);
-        }
+        if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
-        if (!data || typeof data !== 'object') {
-            throw new Error('JSON 数据格式错误：应为对象或数组');
-        }
+        if (!data || typeof data !== 'object') throw new Error('JSON 格式错误');
         processVocabData(data);
         enterApp();
         showToast('成功加载词库数据');
-        return;
     } catch (err) {
         console.log('fetch 失败，尝试 XMLHttpRequest:', err.message);
-    }
-
-    try {
-        const data = await new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.overrideMimeType('application/json');
-            xhr.open('GET', './vocab_data.json', true);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200 || xhr.status === 0) {
-                        try {
-                            const data = JSON.parse(xhr.responseText);
-                            resolve(data);
-                        } catch (e) {
-                            reject(new Error('JSON 解析失败'));
-                        }
-                    } else {
-                        reject(new Error('XHR 状态 ' + xhr.status));
+        try {
+            const data = await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.overrideMimeType('application/json');
+                xhr.open('GET', './vocab_data.json', true);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200 || xhr.status === 0) {
+                            try { resolve(JSON.parse(xhr.responseText)); }
+                            catch (e) { reject(new Error('JSON 解析失败')); }
+                        } else { reject(new Error('XHR 状态 ' + xhr.status)); }
                     }
-                }
-            };
-            xhr.onerror = () => reject(new Error('XHR 网络错误'));
-            xhr.send();
-        });
-
-        if (!data || typeof data !== 'object') {
-            throw new Error('JSON 数据格式错误：应为对象或数组');
+                };
+                xhr.onerror = () => reject(new Error('XHR 网络错误'));
+                xhr.send();
+            });
+            if (!data || typeof data !== 'object') throw new Error('JSON 格式错误');
+            processVocabData(data);
+            enterApp();
+            showToast('成功加载词库数据');
+        } catch (err2) {
+            console.error('词库加载失败:', err2);
+            showLoadingError();
         }
-        processVocabData(data);
-        enterApp();
-        showToast('成功加载词库数据');
-        return;
-    } catch (err2) {
-        console.error('词库加载失败:', err2);
-        showLoadingError();
     }
 }
 
 function processVocabData(data) {
     VOCAB_DATA = data;
-    // 统一数据结构：无论传入数组还是对象，都转换为数组便于后续使用
-    if (!Array.isArray(VOCAB_DATA) && VOCAB_DATA.words) {
-        VOCAB_DATA = VOCAB_DATA.words;
-    }
+
+    // 扁平化：将所有单词（示例词+扩展词）提取为统一格式
+    ALL_WORDS = [];
+
+    const categories = ['roots', 'prefixes', 'suffixes'];
+    categories.forEach(cat => {
+        const items = VOCAB_DATA[cat] || [];
+        items.forEach(item => {
+            const rootName = item.name || '';
+            const rootArch = item.archaeology || '';
+            const type = item.type || 'root';
+
+            // 处理示例词 (examples)
+            const examples = item.examples || [];
+            examples.forEach(ex => {
+                ALL_WORDS.push({
+                    word: ex.word || '',
+                    root: rootName,
+                    rootArch: rootArch,
+                    type: type,
+                    level: 'example',
+                    pos: ex.pos || '',
+                    pronunciation: ex.pronunciation || '',
+                    meaning: ex.chinese_meaning || '',
+                    etymology: ex.decomposition || '',
+                    explanation: ex.analysis || '',
+                    sentence: ex.example || ''
+                });
+            });
+
+            // 处理扩展词 (expansion)
+            const expansions = item.expansion || [];
+            expansions.forEach(exp => {
+                // 处理一些扩展词数据格式不规范的情况
+                let word = exp.word || '';
+                let pos = exp.pos || '';
+                let meaning = exp.meaning || '';
+                let pronunciation = exp.pronunciation || '';
+
+                // 有些扩展词格式是 "word [pronunciation] pos.meaning"
+                if (word && !meaning && word.includes('[') && word.includes(']')) {
+                    const match = word.match(/^(.+?)\s*\[(.+?)\]\s*(\w+\.?)\s*(.+)$/);
+                    if (match) {
+                        word = match[1].trim();
+                        pronunciation = match[2].trim();
+                        pos = match[3].trim();
+                        meaning = match[4].trim();
+                    }
+                }
+
+                ALL_WORDS.push({
+                    word: word,
+                    root: rootName,
+                    rootArch: rootArch,
+                    type: type,
+                    level: 'expansion',
+                    pos: pos,
+                    pronunciation: pronunciation,
+                    meaning: meaning,
+                    etymology: '',
+                    explanation: '',
+                    sentence: ''
+                });
+            });
+        });
+    });
 }
 
 function enterApp() {
     document.getElementById('page-loading').classList.add('hidden');
     document.getElementById('page-error').classList.add('hidden');
-    
-    // 如果用户原代码中定义了 initApp，优先调用它
     if (typeof initApp === 'function') {
         initApp();
     } else {
@@ -1039,53 +1085,31 @@ function showToast(message) {
     setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ===== 默认初始化（如果用户原代码未提供 initApp） =====
+// ===== 默认初始化 =====
 function defaultInitApp() {
-    // 统计
-    let totalRoots = 0, totalPrefixes = 0, totalSuffixes = 0, totalWords = 0;
-    
-    if (Array.isArray(VOCAB_DATA)) {
-        totalWords = VOCAB_DATA.length;
-        const roots = new Set();
-        const prefixes = new Set();
-        const suffixes = new Set();
-        VOCAB_DATA.forEach(item => {
-            if (item.root) roots.add(item.root);
-            if (item.prefix) prefixes.add(item.prefix);
-            if (item.suffix) suffixes.add(item.suffix);
-            if (item.type === 'root') roots.add(item.name || item.root);
-            if (item.type === 'prefix') prefixes.add(item.name || item.prefix);
-            if (item.type === 'suffix') suffixes.add(item.name || item.suffix);
-        });
-        totalRoots = roots.size;
-        totalPrefixes = prefixes.size;
-        totalSuffixes = suffixes.size;
-    } else if (VOCAB_DATA && typeof VOCAB_DATA === 'object') {
-        if (VOCAB_DATA.roots) totalRoots = Object.keys(VOCAB_DATA.roots).length;
-        if (VOCAB_DATA.prefixes) totalPrefixes = Object.keys(VOCAB_DATA.prefixes).length;
-        if (VOCAB_DATA.suffixes) totalSuffixes = Object.keys(VOCAB_DATA.suffixes).length;
-        if (VOCAB_DATA.words) totalWords = VOCAB_DATA.words.length;
-    }
-    
+    const roots = VOCAB_DATA.roots || [];
+    const prefixes = VOCAB_DATA.prefixes || [];
+    const suffixes = VOCAB_DATA.suffixes || [];
+
     const sRoots = document.getElementById('stat-roots');
     const sPrefixes = document.getElementById('stat-prefixes');
     const sSuffixes = document.getElementById('stat-suffixes');
     const sWords = document.getElementById('stat-words');
-    if (sRoots) sRoots.textContent = totalRoots || 0;
-    if (sPrefixes) sPrefixes.textContent = totalPrefixes || 0;
-    if (sSuffixes) sSuffixes.textContent = totalSuffixes || 0;
-    if (sWords) sWords.textContent = totalWords || 0;
-    
-    // 默认渲染词库浏览页（roots）
+
+    if (sRoots) sRoots.textContent = roots.length;
+    if (sPrefixes) sPrefixes.textContent = prefixes.length;
+    if (sSuffixes) sSuffixes.textContent = suffixes.length;
+    if (sWords) sWords.textContent = ALL_WORDS.length;
+
     renderBrowseRoots();
 }
 
-// ===== 视图与功能函数 =====
+// ===== 视图切换 =====
 function switchView(viewName) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     const target = document.getElementById('view-' + viewName);
     if (target) target.classList.add('active');
-    
+
     document.querySelectorAll('.nav-tab').forEach((tab, idx) => {
         tab.classList.remove('active');
         const map = ['home', 'study', 'browse'];
@@ -1093,14 +1117,14 @@ function switchView(viewName) {
     });
 }
 
-// 学习模式
+// ===== 学习模式 =====
 let studyWords = [];
 let studyIndex = 0;
 let studyRevealed = false;
 let currentFilters = { type: 'all', level: 'all' };
 
 function startStudy() {
-    if (!VOCAB_DATA || !Array.isArray(VOCAB_DATA) || VOCAB_DATA.length === 0) {
+    if (!ALL_WORDS || ALL_WORDS.length === 0) {
         showToast('词库尚未加载或为空');
         return;
     }
@@ -1110,12 +1134,20 @@ function startStudy() {
 }
 
 function prepareStudyWords() {
-    let pool = [...VOCAB_DATA];
-    // 简单筛选
+    let pool = [...ALL_WORDS];
+
+    // 类型筛选
     if (currentFilters.type !== 'all') {
-        pool = pool.filter(item => (item.type || '').toLowerCase() === currentFilters.type);
+        pool = pool.filter(item => item.type === currentFilters.type);
     }
-    if (pool.length === 0) pool = [...VOCAB_DATA];
+
+    // 难度筛选
+    if (currentFilters.level !== 'all') {
+        pool = pool.filter(item => item.level === currentFilters.level);
+    }
+
+    if (pool.length === 0) pool = [...ALL_WORDS];
+
     studyWords = shuffle(pool).slice(0, Math.min(pool.length, 20));
     studyIndex = 0;
     studyRevealed = false;
@@ -1125,38 +1157,40 @@ function showStudyCard() {
     const card = document.getElementById('word-card');
     const q = studyWords[studyIndex];
     if (!q || !card) return;
-    
+
     const total = studyWords.length;
     const current = studyIndex + 1;
     document.getElementById('progress-text').textContent = current + ' / ' + total;
     document.getElementById('progress-percent').textContent = Math.round((current / total) * 100) + '%';
     document.getElementById('progress-fill').style.width = (current / total) * 100 + '%';
-    
-    const type = (q.type || 'root').toLowerCase();
+
+    const type = q.type || 'root';
     const badgeClass = type === 'prefix' ? 'badge-prefix' : type === 'suffix' ? 'badge-suffix' : 'badge-root';
     const badgeText = type === 'prefix' ? 'PREFIX' : type === 'suffix' ? 'SUFFIX' : 'ROOT';
-    
+    const levelTag = q.level === 'example' ? '示例词' : '扩展词';
+
     card.className = 'word-card';
     card.innerHTML = `
         <div class="card-badge ${badgeClass}">${badgeText}</div>
         <div class="word-main">
-            <div class="word-text">${esc(q.word || q.name || '')}</div>
-            <div class="word-pronunciation">${esc(q.phonetic || q.pronunciation || '')}</div>
-            <div class="word-pos">${esc(q.pos || '')}</div>
+            <div class="word-text">${esc(q.word)}</div>
+            <div class="word-pronunciation">${esc(q.pronunciation)}</div>
+            <div class="word-pos">${esc(q.pos)} <span style="margin-left:8px;opacity:0.6">${levelTag}</span></div>
         </div>
-        <div class="root-tag">📌 ${esc(q.root || q.name || '')}</div>
+        <div class="root-tag">📌 ${esc(q.root)}</div>
         <div class="hidden-content">
             <div class="divider"></div>
             <div class="meaning-section">
                 <h3>释义</h3>
-                <div class="meaning-text">${esc(q.meaning || '')}</div>
+                <div class="meaning-text">${esc(q.meaning)}</div>
             </div>
             ${q.etymology ? `<div class="decomposition">${esc(q.etymology)}</div>` : ''}
             ${q.explanation ? `<div class="analysis-text">${esc(q.explanation)}</div>` : ''}
             ${q.sentence ? `<div class="example-box"><div class="en">${esc(q.sentence)}</div></div>` : ''}
+            ${q.rootArch ? `<div class="example-box" style="border-left-color:var(--primary);margin-top:12px;"><div class="cn">${esc(q.rootArch)}</div></div>` : ''}
         </div>
     `;
-    
+
     const actionBar = document.getElementById('action-bar');
     actionBar.innerHTML = `<button class="action-btn btn-reveal" onclick="revealCard()"><span>👁</span> 显示释义</button>`;
 }
@@ -1200,113 +1234,89 @@ function showStudyComplete() {
     document.getElementById('action-bar').innerHTML = '';
 }
 
-// 筛选器
+// ===== 筛选器 =====
 function setFilter(category, value) {
     if (category === 'type') currentFilters.type = value;
     if (category === 'level') currentFilters.level = value;
-    
-    // 更新 UI active 状态
-    const groups = document.querySelectorAll('.filter-group');
-    groups.forEach(g => {
-        const chips = g.querySelectorAll('.filter-chip');
-        chips.forEach(chip => {
-            const filterVal = chip.getAttribute('onclick');
-            const isMatch = filterVal && filterVal.includes("'" + value + "'");
-            const isAll = filterVal && filterVal.includes("'all'") && value === 'all';
-            if ((isMatch && value !== 'all') || (isAll && value === 'all')) {
-                // 需要更精确匹配，这里简化：只处理当前点击的 chip
-            }
-        });
+
+    const chips = document.querySelectorAll('.filter-chip');
+    chips.forEach(chip => {
+        const onclick = chip.getAttribute('onclick') || '';
+        const isActive = onclick.includes("'" + value + "'") && onclick.includes(category);
+        const isAllActive = value === 'all' && onclick.includes("'all'") && onclick.includes(category);
+        if (isActive || isAllActive) {
+            chip.classList.add('active');
+        } else if (onclick.includes(category)) {
+            chip.classList.remove('active');
+        }
     });
-    
-    // 简化：直接重新渲染当前点击的 chip 样式（通过事件委托更好，但这里保持简单）
-    event.target.classList.add('active');
-    const siblings = event.target.parentElement.querySelectorAll('.filter-chip');
-    siblings.forEach(s => {
-        if (s !== event.target) s.classList.remove('active');
-    });
+
+    // 如果在学习页面，重新准备单词
+    const studyView = document.getElementById('view-study');
+    if (studyView && studyView.classList.contains('active')) {
+        prepareStudyWords();
+        showStudyCard();
+    }
 }
 
-// 浏览页
+// ===== 浏览页 =====
 function switchBrowse(type) {
-    // 更新 chip 样式
     const chips = event.target.parentElement.querySelectorAll('.filter-chip');
     chips.forEach(c => c.classList.remove('active'));
     event.target.classList.add('active');
-    
-    if (type === 'roots') renderBrowseRoots();
-    else if (type === 'prefixes') renderBrowseByType('prefix');
-    else if (type === 'suffixes') renderBrowseByType('suffix');
+
+    if (type === 'roots') renderBrowseByCategory('roots');
+    else if (type === 'prefixes') renderBrowseByCategory('prefixes');
+    else if (type === 'suffixes') renderBrowseByCategory('suffixes');
 }
 
 function renderBrowseRoots() {
+    renderBrowseByCategory('roots');
+}
+
+function renderBrowseByCategory(category) {
     const grid = document.getElementById('browse-grid');
     if (!grid) return;
     grid.innerHTML = '';
-    
-    let items = [];
-    if (Array.isArray(VOCAB_DATA)) {
-        items = VOCAB_DATA.filter(item => item.type === 'root' || item.root);
-    } else if (VOCAB_DATA && VOCAB_DATA.roots) {
-        items = Object.entries(VOCAB_DATA.roots).map(([key, val]) => ({
-            name: key, meaning: val, words: []
-        }));
-    }
-    
+
+    const items = (VOCAB_DATA && VOCAB_DATA[category]) || [];
+
     if (items.length === 0) {
-        grid.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">暂无词根数据</div>';
+        grid.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">暂无数据</div>';
         return;
     }
-    
+
     items.forEach(item => {
         const card = document.createElement('div');
         card.className = 'browse-card';
-        const title = item.name || item.root || item.word || '未知';
-        const desc = item.meaning || item.description || item.desc || '';
-        const words = item.words || item.examples || [];
+        const title = item.name || '未知';
+        const desc = item.archaeology || '';
+
+        // 收集所有相关单词
+        const exampleWords = (item.examples || []).map(e => e.word).filter(Boolean);
+        const expansionWords = (item.expansion || []).map(e => {
+            let w = e.word || '';
+            if (w.includes('[')) w = w.split('[')[0].trim();
+            return w;
+        }).filter(Boolean);
+        const allWords = [...exampleWords, ...expansionWords];
+
         card.innerHTML = `
             <div class="browse-card-header">
                 <div class="browse-card-title">${esc(title)}</div>
-                <div class="browse-card-count">${words.length} 词</div>
+                <div class="browse-card-count">${allWords.length} 词</div>
             </div>
             <div class="browse-card-desc">${esc(desc)}</div>
             <div class="browse-card-words">
-                ${words.slice(0, 5).map(w => `<span class="word-chip">${esc(typeof w === 'string' ? w : (w.word || ''))}</span>`).join('')}
+                ${allWords.slice(0, 8).map(w => `<span class="word-chip">${esc(w)}</span>`).join('')}
+                ${allWords.length > 8 ? `<span class="word-chip">+${allWords.length - 8}</span>` : ''}
             </div>
         `;
         grid.appendChild(card);
     });
 }
 
-function renderBrowseByType(type) {
-    const grid = document.getElementById('browse-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    
-    let items = [];
-    if (Array.isArray(VOCAB_DATA)) {
-        items = VOCAB_DATA.filter(item => (item.type || '').toLowerCase() === type);
-    }
-    
-    if (items.length === 0) {
-        grid.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:40px;">暂无${type === 'prefix' ? '前缀' : '后缀'}数据</div>`;
-        return;
-    }
-    
-    items.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'browse-card';
-        card.innerHTML = `
-            <div class="browse-card-header">
-                <div class="browse-card-title">${esc(item.name || item.word || item.prefix || item.suffix || '未知')}</div>
-            </div>
-            <div class="browse-card-desc">${esc(item.meaning || '')}</div>
-        `;
-        grid.appendChild(card);
-    });
-}
-
-// 工具函数
+// ===== 工具函数 =====
 function esc(text) {
     if (!text) return '';
     const d = document.createElement('div');
@@ -1323,11 +1333,11 @@ function shuffle(array) {
     return arr;
 }
 
-// 键盘快捷键
+// ===== 键盘快捷键 =====
 document.addEventListener('keydown', (e) => {
     const studyView = document.getElementById('view-study');
     if (!studyView || !studyView.classList.contains('active')) return;
-    
+
     if (e.code === 'Space') {
         e.preventDefault();
         if (!studyRevealed) revealCard();
