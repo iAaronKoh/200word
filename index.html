@@ -1345,6 +1345,7 @@ body {
 <base target="_blank">
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -2976,8 +2977,9 @@ function showW2CQuestion() {
     const shuffledDistractors = shuffle(distractors).slice(0, 3);
     const options = shuffle([correctAnswer, ...shuffledDistractors]);
 
+    // 使用 data 属性存储选项数据，避免内联 onclick 的引号问题
     const optionsHtml = options.map((opt, idx) => `
-        <div class="quiz-option" onclick="w2cSelect(${idx}, '${esc(opt).replace(/'/g, "\'")}', '${esc(correctAnswer).replace(/'/g, "\'")}')">
+        <div class="quiz-option" data-w2c-idx="${idx}" data-w2c-opt="${esc(opt)}" data-w2c-ans="${esc(correctAnswer)}">
             <span class="opt-letter">${String.fromCharCode(65 + idx)}</span>
             <span>${esc(opt)}</span>
         </div>
@@ -2990,8 +2992,15 @@ function showW2CQuestion() {
     w2cAnswered = false;
 }
 
-function w2cSelect(idx, selected, correct) {
+function w2cSelect(e) {
     if (w2cAnswered) return;
+    const target = e.target.closest('.quiz-option');
+    if (!target) return;
+
+    const idx = parseInt(target.dataset.w2cIdx);
+    const selected = target.dataset.w2cOpt;
+    const correct = target.dataset.w2cAns;
+
     w2cAnswered = true;
 
     const options = document.querySelectorAll('#w2c-options .quiz-option');
@@ -3106,8 +3115,9 @@ function showC2WQuestion() {
     const shuffledDistractors = shuffle(distractors).slice(0, 3);
     const options = shuffle([correctAnswer, ...shuffledDistractors]);
 
+    // 使用 data 属性存储选项数据，避免内联 onclick 的引号问题
     const optionsHtml = options.map((opt, idx) => `
-        <div class="quiz-option" onclick="c2wSelect(${idx}, '${esc(opt).replace(/'/g, "\'")}', '${esc(correctAnswer).replace(/'/g, "\'")}')">
+        <div class="quiz-option" data-c2w-idx="${idx}" data-c2w-opt="${esc(opt)}" data-c2w-ans="${esc(correctAnswer)}">
             <span class="opt-letter">${String.fromCharCode(65 + idx)}</span>
             <span style="font-family:Georgia,serif;font-weight:600;">${esc(opt)}</span>
         </div>
@@ -3120,8 +3130,15 @@ function showC2WQuestion() {
     c2wAnswered = false;
 }
 
-function c2wSelect(idx, selected, correct) {
+function c2wSelect(e) {
     if (c2wAnswered) return;
+    const target = e.target.closest('.quiz-option');
+    if (!target) return;
+
+    const idx = parseInt(target.dataset.c2wIdx);
+    const selected = target.dataset.c2wOpt;
+    const correct = target.dataset.c2wAns;
+
     c2wAnswered = true;
 
     const options = document.querySelectorAll('#c2w-options .quiz-option');
@@ -3188,6 +3205,22 @@ function showC2WComplete() {
     `;
 }
 
+// ===== 事件委托：单词选中文选项点击 =====
+document.addEventListener('click', (e) => {
+    const w2cOptions = e.target.closest('#w2c-options');
+    if (w2cOptions && e.target.closest('.quiz-option')) {
+        w2cSelect(e);
+    }
+});
+
+// ===== 事件委托：中文选单词选项点击 =====
+document.addEventListener('click', (e) => {
+    const c2wOptions = e.target.closest('#c2w-options');
+    if (c2wOptions && e.target.closest('.quiz-option')) {
+        c2wSelect(e);
+    }
+});
+
 // ===== 键盘快捷键支持 =====
 document.addEventListener('keydown', (e) => {
     const w2cView = document.getElementById('view-word2cn');
@@ -3197,7 +3230,10 @@ document.addEventListener('keydown', (e) => {
         if (e.key >= '1' && e.key <= '4' && !w2cAnswered) {
             const idx = parseInt(e.key) - 1;
             const options = document.querySelectorAll('#w2c-options .quiz-option');
-            if (options[idx]) options[idx].click();
+            if (options[idx]) {
+                const event = new MouseEvent('click', { bubbles: true });
+                options[idx].dispatchEvent(event);
+            }
         }
         if (e.key === 'Enter' && w2cAnswered) {
             w2cNext();
@@ -3208,7 +3244,11 @@ document.addEventListener('keydown', (e) => {
         if (e.key >= '1' && e.key <= '4' && !c2wAnswered) {
             const idx = parseInt(e.key) - 1;
             const options = document.querySelectorAll('#c2w-options .quiz-option');
-            if (options[idx]) options[idx].click();
+            if (options[idx]) {
+                // 模拟点击事件
+                const event = new MouseEvent('click', { bubbles: true });
+                options[idx].dispatchEvent(event);
+            }
         }
         if (e.key === 'Enter' && c2wAnswered) {
             c2wNext();
