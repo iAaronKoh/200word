@@ -1126,9 +1126,10 @@ body {
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="switchView('home')">🏠 首页</button>
     <button class="nav-tab" onclick="switchView('study')">🎯 背单词</button>
-    <button class="nav-tab" onclick="switchView('browse')">📖 词库</button>
-    <button class="nav-tab" onclick="switchView('favorites')">📝 错题本</button>
+    <button class="nav-tab" onclick="switchView('review')">🔄 复习</button>
+    <button class="nav-tab" onclick="switchView('favorites')">⭐ 生词本</button>
     <button class="nav-tab" onclick="switchView('stats')">📊 统计</button>
+    <button class="nav-tab" onclick="switchView('browse')">📖 词库</button>
   </div>
 </nav>
 
@@ -1160,29 +1161,7 @@ body {
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:900px;margin:0 auto 40px;">
-        <div class="stat-card" style="cursor:pointer;" onclick="startStudy()">
-            <div style="font-size:36px;margin-bottom:8px;">🎯</div>
-            <div style="font-size:16px;font-weight:700;color:var(--text);">闪卡练习</div>
-            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">传统的看词想义</div>
-        </div>
-        <div class="stat-card" style="cursor:pointer;" onclick="startDecompositionMode()">
-            <div style="font-size:36px;margin-bottom:8px;">🔧</div>
-            <div style="font-size:16px;font-weight:700;color:var(--text);">词根拆解</div>
-            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">拼出单词的词根组合</div>
-        </div>
-        <div class="stat-card" style="cursor:pointer;" onclick="startSentenceMode()">
-            <div style="font-size:36px;margin-bottom:8px;">📖</div>
-            <div style="font-size:16px;font-weight:700;color:var(--text);">例句填空</div>
-            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">在语境中选择正确单词</div>
-        </div>
-        <div class="stat-card" style="cursor:pointer;" onclick="startSpellMode()">
-            <div style="font-size:36px;margin-bottom:8px;">✍️</div>
-            <div style="font-size:16px;font-weight:700;color:var(--text);">拼写练习</div>
-            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">根据音标和释义拼写</div>
-        </div>
-    </div>
-    <button class="cta-button" onclick="startStudy()">
+      <button class="cta-button" onclick="startStudy()">
         <span>🚀</span> 开始背单词
       </button>
     </div>
@@ -1259,28 +1238,104 @@ body {
     </div>
   </div>
 
-</div>
+  <!-- ===== 复习模式 ===== -->
+  <div class="view" id="view-review">
+    <div class="hero" style="padding-top:40px;">
+      <h1>🔄 智能复习</h1>
+      <p>基于你的学习记录，智能推荐需要复习的单词</p>
 
-  <!-- ===== 错题本 ===== -->
-  <div class="view" id="view-favorites">
-    <div class="study-header">
-      <div class="study-title">📝 错题本 / 收藏</div>
-      <button class="cta-button" style="padding:10px 24px;font-size:14px;" onclick="startFavoritesReview()">▶️ 复习错题</button>
-    </div>
-    <div id="favorites-list" style="max-width:800px;margin:0 auto;">
-      <!-- 动态内容 -->
+      <div class="stats-grid" style="max-width:600px;margin:30px auto;">
+        <div class="stat-card" style="cursor:pointer;" onclick="startReviewMode('unknown')">
+          <div class="stat-number" id="review-unknown-count" style="font-size:28px;">0</div>
+          <div class="stat-label">❌ 不认识的单词</div>
+        </div>
+        <div class="stat-card" style="cursor:pointer;" onclick="startReviewMode('favorites')">
+          <div class="stat-number" id="review-fav-count" style="font-size:28px;">0</div>
+          <div class="stat-label">⭐ 收藏的单词</div>
+        </div>
+        <div class="stat-card" style="cursor:pointer;" onclick="startReviewMode('mixed')">
+          <div class="stat-number" id="review-mixed-count" style="font-size:28px;">0</div>
+          <div class="stat-label">🎯 混合复习</div>
+        </div>
+      </div>
+
+      <div style="max-width:500px;margin:0 auto 30px;text-align:left;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;">
+        <div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">复习建议</div>
+        <div id="review-suggestions" style="font-size:15px;color:var(--text);line-height:2;">
+          <div style="color:var(--text-muted);">开始学习来生成复习建议...</div>
+        </div>
+      </div>
+
+      <button class="cta-button" onclick="startReview()">开始智能复习</button>
     </div>
   </div>
 
-  <!-- ===== 统计面板 ===== -->
+  <!-- ===== 生词本 ===== -->
+  <div class="view" id="view-favorites">
+    <div class="study-header">
+      <div class="study-title">⭐ 生词本</div>
+      <div style="font-size:14px;color:var(--text-muted);">
+        共 <span id="fav-total-count">0</span> 个单词
+      </div>
+    </div>
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label">操作:</span>
+        <button class="filter-chip" style="background:var(--danger);color:white;border:none;" onclick="clearAllFavorites()">🗑 清空生词本</button>
+      </div>
+    </div>
+    <div class="browse-grid" id="favorites-grid">
+      <!-- 动态内容 -->
+    </div>
+    <div id="fav-empty" style="text-align:center;padding:60px 20px;display:none;">
+      <div style="font-size:48px;margin-bottom:16px;">📭</div>
+      <div style="font-size:18px;color:var(--text-muted);">生词本为空</div>
+      <div style="font-size:14px;color:var(--text-dim);margin-top:8px;">在学习过程中点击 ⭐ 收藏单词</div>
+    </div>
+  </div>
+
+  <!-- ===== 统计页面 ===== -->
   <div class="view" id="view-stats">
     <div class="study-header">
       <div class="study-title">📊 学习统计</div>
+      <button class="filter-chip" style="background:var(--danger);color:white;border:none;" onclick="clearStudyRecords()">🗑 清除记录</button>
     </div>
-    <div id="stats-panel" style="max-width:800px;margin:0 auto;">
-      <!-- 动态内容 -->
+
+    <div class="stats-grid" style="margin-bottom:30px;">
+      <div class="stat-card">
+        <div class="stat-number" id="stat-total-learned">0</div>
+        <div class="stat-label">已学习单词</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-known">0</div>
+        <div class="stat-label">✅ 已掌握</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-unknown">0</div>
+        <div class="stat-label">❌ 需复习</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-mastery">0%</div>
+        <div class="stat-label">掌握率</div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;">
+      <div style="font-size:14px;color:var(--text-muted);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;">最近7天学习趋势</div>
+      <div id="stats-chart" style="display:flex;align-items:flex-end;gap:8px;height:150px;padding-top:20px;">
+        <!-- 动态生成柱状图 -->
+      </div>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;">
+      <div style="font-size:14px;color:var(--text-muted);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;">今日学习</div>
+      <div id="today-stats" style="font-size:15px;color:var(--text);line-height:2;">
+        今天还没有学习记录，开始背单词吧！
+      </div>
     </div>
   </div>
+
+</div>
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
@@ -1573,29 +1628,7 @@ function showStudyComplete() {
                 <div class="complete-stats">
                     <div class="complete-stat"><div class="num">${studyWords.length}</div><div class="label">总单词</div></div>
                 </div>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:900px;margin:0 auto 40px;">
-        <div class="stat-card" style="cursor:pointer;" onclick="startStudy()">
-            <div style="font-size:36px;margin-bottom:8px;">🎯</div>
-            <div style="font-size:16px;font-weight:700;color:var(--text);">闪卡练习</div>
-            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">传统的看词想义</div>
-        </div>
-        <div class="stat-card" style="cursor:pointer;" onclick="startDecompositionMode()">
-            <div style="font-size:36px;margin-bottom:8px;">🔧</div>
-            <div style="font-size:16px;font-weight:700;color:var(--text);">词根拆解</div>
-            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">拼出单词的词根组合</div>
-        </div>
-        <div class="stat-card" style="cursor:pointer;" onclick="startSentenceMode()">
-            <div style="font-size:36px;margin-bottom:8px;">📖</div>
-            <div style="font-size:16px;font-weight:700;color:var(--text);">例句填空</div>
-            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">在语境中选择正确单词</div>
-        </div>
-        <div class="stat-card" style="cursor:pointer;" onclick="startSpellMode()">
-            <div style="font-size:36px;margin-bottom:8px;">✍️</div>
-            <div style="font-size:16px;font-weight:700;color:var(--text);">拼写练习</div>
-            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">根据音标和释义拼写</div>
-        </div>
-    </div>
-    <button class="cta-button" onclick="startStudy()">再来一组</button>
+                <button class="cta-button" onclick="startStudy()">再来一组</button>
                 <button class="cta-button" style="margin-top:12px;background:var(--bg-elevated);color:var(--text);" onclick="switchView('home')">返回首页</button>
             </div>
         `;
@@ -1710,777 +1743,7 @@ document.addEventListener('keydown', (e) => {
     if (e.code === 'Space') {
         e.preventDefault();
         if (!studyRevealed) revealCard();
-   
-
-<!-- ===== 新增功能：单词收藏/错题本系统 ===== -->
-<script>
-// 收藏/错题本管理
-const FavoritesManager = {
-    getKey() { return 'vocab_favorites_' + (localStorage.getItem('vocab-user-id') || 'default'); },
-
-    getAll() {
-        try { return JSON.parse(localStorage.getItem(this.getKey()) || '[]'); }
-        catch(e) { return []; }
-    },
-
-    add(word, root, type, reason) {
-        const items = this.getAll();
-        if (!items.find(i => i.word === word)) {
-            items.push({ word, root, type, reason, addedAt: Date.now(), reviewCount: 0 });
-            localStorage.setItem(this.getKey(), JSON.stringify(items));
-        }
-    },
-
-    remove(word) {
-        const items = this.getAll().filter(i => i.word !== word);
-        localStorage.setItem(this.getKey(), JSON.stringify(items));
-    },
-
-    isFavorited(word) {
-        return this.getAll().some(i => i.word === word);
-    },
-
-    incrementReview(word) {
-        const items = this.getAll();
-        const item = items.find(i => i.word === word);
-        if (item) { item.reviewCount++; item.lastReviewed = Date.now(); }
-        localStorage.setItem(this.getKey(), JSON.stringify(items));
     }
-};
-
-// 学习进度追踪
-const ProgressTracker = {
-    getKey() { return 'vocab_progress_' + (localStorage.getItem('vocab-user-id') || 'default'); },
-
-    getStats() {
-        try { return JSON.parse(localStorage.getItem(this.getKey()) || '{}'); }
-        catch(e) { return {}; }
-    },
-
-    record(word, known, mode) {
-        const stats = this.getStats();
-        if (!stats[word]) stats[word] = { attempts: 0, correct: 0, firstSeen: Date.now(), modes: [] };
-        stats[word].attempts++;
-        if (known) stats[word].correct++;
-        stats[word].lastSeen = Date.now();
-        if (!stats[word].modes.includes(mode)) stats[word].modes.push(mode);
-        localStorage.setItem(this.getKey(), JSON.stringify(stats));
-    },
-
-    getWeakWords() {
-        const stats = this.getStats();
-        return Object.entries(stats)
-            .filter(([_, s]) => s.attempts >= 2 && s.correct / s.attempts < 0.5)
-            .map(([w, s]) => ({ word: w, ...s }))
-            .sort((a, b) => (a.correct/a.attempts) - (b.correct/b.attempts));
-    },
-
-    getMasteryLevel() {
-        const stats = this.getStats();
-        const words = Object.keys(stats);
-        if (words.length === 0) return 0;
-        const mastered = words.filter(w => stats[w].correct >= 3 && stats[w].correct/stats[w].attempts >= 0.8).length;
-        return Math.round((mastered / words.length) * 100);
-    }
-};
-</script>
-
-<!-- ===== 新增功能：词根拆解练习模式 ===== -->
-<script>
-let decompMode = {
-    active: false,
-    current: null,
-    pool: [],
-    index: 0,
-    score: 0
-};
-
-function startDecompositionMode() {
-    if (!ALL_WORDS || ALL_WORDS.length === 0) {
-        showToast('词库尚未加载');
-        return;
-    }
-    // 只选择有拆解数据的示例词
-    const pool = ALL_WORDS.filter(w => w.etymology && w.etymology.includes('+'));
-    if (pool.length === 0) {
-        showToast('暂无拆解练习数据');
-        return;
-    }
-    decompMode.pool = shuffle(pool).slice(0, 20);
-    decompMode.index = 0;
-    decompMode.score = 0;
-    decompMode.active = true;
-    switchView('study');
-    showDecompCard();
-}
-
-function showDecompCard() {
-    const q = decompMode.pool[decompMode.index];
-    decompMode.current = q;
-    const card = document.getElementById('word-card');
-    const total = decompMode.pool.length;
-    const current = decompMode.index + 1;
-
-    document.getElementById('progress-text').textContent = current + ' / ' + total;
-    document.getElementById('progress-percent').textContent = Math.round((current/total)*100) + '%';
-    document.getElementById('progress-fill').style.width = (current/total)*100 + '%';
-
-    // 解析拆解部分
-    const parts = q.etymology.split('+').map(p => p.trim()).filter(Boolean);
-    const shuffledParts = shuffle([...parts]);
-
-    card.className = 'word-card';
-    card.innerHTML = `
-        <div class="card-badge badge-root">拆解练习</div>
-        <div class="word-main">
-            <div class="word-text">${esc(q.word)}</div>
-            <div class="word-pronunciation">${esc(q.pronunciation)}</div>
-            <div class="word-pos">${esc(q.pos)}</div>
-        </div>
-        <div class="root-tag">📌 ${esc(q.root)}</div>
-        <div class="divider"></div>
-        <div class="meaning-section">
-            <h3>请按正确顺序点击词根/词缀组合</h3>
-            <div class="decomp-target" id="decomp-target" style="min-height:48px;background:var(--bg);border-radius:12px;padding:12px;margin:16px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;border:2px dashed var(--border);">
-                <span style="color:var(--text-dim);font-size:14px;">点击上方组件按顺序排列</span>
-            </div>
-            <div class="decomp-parts" id="decomp-parts" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px;">
-                ${shuffledParts.map((part, idx) => `
-                    <button class="decomp-part-btn" data-part="${esc(part)}" onclick="selectDecompPart(this, '${esc(part)}')" 
-                        style="padding:10px 18px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 12px rgba(99,102,241,0.3);">
-                        ${esc(part)}
-                    </button>
-                `).join('')}
-            </div>
-        </div>
-        <div id="decomp-feedback" style="margin-top:16px;text-align:center;font-weight:600;font-size:16px;min-height:24px;"></div>
-    `;
-
-    const actionBar = document.getElementById('action-bar');
-    actionBar.innerHTML = `
-        <button class="action-btn btn-next" onclick="skipDecomp()"><span>⏭</span> 跳过</button>
-        <button class="action-btn btn-reveal" onclick="checkDecomp()"><span>✓</span> 确认</button>
-    `;
-}
-
-let selectedParts = [];
-
-function selectDecompPart(btn, part) {
-    if (btn.disabled) return;
-    selectedParts.push(part);
-    btn.disabled = true;
-    btn.style.opacity = '0.4';
-    btn.style.transform = 'scale(0.9)';
-
-    const target = document.getElementById('decomp-target');
-    if (selectedParts.length === 1) target.innerHTML = '';
-
-    const chip = document.createElement('span');
-    chip.className = 'decomp-selected-chip';
-    chip.textContent = part;
-    chip.style.cssText = 'padding:8px 16px;background:linear-gradient(135deg,var(--accent),#059669);color:white;border-radius:10px;font-weight:600;font-size:15px;animation:slideIn 0.3s ease;';
-    target.appendChild(chip);
-
-    // 添加连接符
-    if (selectedParts.length < decompMode.current.etymology.split('+').length) {
-        const plus = document.createElement('span');
-        plus.textContent = '+';
-        plus.style.cssText = 'color:var(--primary-light);font-weight:800;font-size:18px;';
-        target.appendChild(plus);
-    }
-}
-
-function checkDecomp() {
-    const q = decompMode.current;
-    const correct = q.etymology.split('+').map(p => p.trim()).filter(Boolean);
-    const feedback = document.getElementById('decomp-feedback');
-
-    if (selectedParts.length === 0) {
-        feedback.innerHTML = '<span style="color:var(--secondary)">请先选择词根组件</span>';
-        return;
-    }
-
-    const isCorrect = selectedParts.length === correct.length && 
-                      selectedParts.every((p, i) => p === correct[i]);
-
-    if (isCorrect) {
-        feedback.innerHTML = '<span style="color:var(--accent)">✅ 正确！' + q.etymology + '</span>';
-        decompMode.score++;
-        ProgressTracker.record(q.word, true, 'decomposition');
-
-        // 显示完整释义
-        const card = document.getElementById('word-card');
-        const hiddenDiv = document.createElement('div');
-        hiddenDiv.innerHTML = `
-            <div class="divider"></div>
-            <div class="meaning-section">
-                <h3>释义</h3>
-                <div class="meaning-text">${esc(q.meaning)}</div>
-            </div>
-            <div class="analysis-text">${esc(q.explanation || '')}</div>
-            ${q.sentence ? `<div class="example-box"><div class="en">${esc(q.sentence)}</div></div>` : ''}
-        `;
-        card.appendChild(hiddenDiv);
-
-        setTimeout(() => nextDecomp(), 2000);
-    } else {
-        feedback.innerHTML = '<span style="color:var(--danger)">❌ 顺序不对，正确答案是：' + esc(q.etymology) + '</span>';
-        ProgressTracker.record(q.word, false, 'decomposition');
-        FavoritesManager.add(q.word, q.root, q.type, '拆解错误');
-
-        // 标记错误按钮
-        document.querySelectorAll('.decomp-part-btn').forEach(btn => {
-            if (!btn.disabled) btn.style.background = 'var(--danger)';
-        });
-    }
-}
-
-function skipDecomp() {
-    selectedParts = [];
-    nextDecomp();
-}
-
-function nextDecomp() {
-    selectedParts = [];
-    decompMode.index++;
-    if (decompMode.index >= decompMode.pool.length) {
-        showDecompComplete();
-    } else {
-        showDecompCard();
-    }
-}
-
-function showDecompComplete() {
-    const container = document.getElementById('card-container');
-    const total = decompMode.pool.length;
-    const score = decompMode.score;
-    const accuracy = Math.round((score/total)*100);
-
-    container.innerHTML = `
-        <div class="complete-screen">
-            <div class="complete-icon">🏆</div>
-            <div class="complete-title">拆解练习完成！</div>
-            <div class="complete-stats">
-                <div class="complete-stat"><div class="num" style="color:var(--primary)">${total}</div><div class="label">总题数</div></div>
-                <div class="complete-stat"><div class="num" style="color:var(--accent)">${score}</div><div class="label">正确</div></div>
-                <div class="complete-stat"><div class="num" style="color:var(--secondary)">${accuracy}%</div><div class="label">准确率</div></div>
-            </div>
-            <button class="cta-button" onclick="startDecompositionMode()">再来一组</button>
-            <button class="cta-button" style="margin-top:12px;background:var(--bg-elevated);color:var(--text);" onclick="switchView('home')">返回首页</button>
-        </div>
-    `;
-    document.getElementById('action-bar').innerHTML = '';
-    decompMode.active = false;
-}
-</script>
-
-<!-- ===== 新增功能：例句填空模式 ===== -->
-<script>
-let sentenceMode = {
-    active: false,
-    pool: [],
-    index: 0,
-    score: 0
-};
-
-function startSentenceMode() {
-    if (!ALL_WORDS || ALL_WORDS.length === 0) {
-        showToast('词库尚未加载');
-        return;
-    }
-    // 只选择有例句的示例词
-    const pool = ALL_WORDS.filter(w => w.sentence && w.sentence.length > 10);
-    if (pool.length === 0) {
-        showToast('暂无例句练习数据');
-        return;
-    }
-    sentenceMode.pool = shuffle(pool).slice(0, 15);
-    sentenceMode.index = 0;
-    sentenceMode.score = 0;
-    sentenceMode.active = true;
-    switchView('study');
-    showSentenceCard();
-}
-
-function showSentenceCard() {
-    const q = sentenceMode.pool[sentenceMode.index];
-    const card = document.getElementById('word-card');
-    const total = sentenceMode.pool.length;
-    const current = sentenceMode.index + 1;
-
-    document.getElementById('progress-text').textContent = current + ' / ' + total;
-    document.getElementById('progress-percent').textContent = Math.round((current/total)*100) + '%';
-    document.getElementById('progress-fill').style.width = (current/total)*100 + '%';
-
-    // 将单词从例句中挖空
-    const sentence = q.sentence;
-    const wordLower = q.word.toLowerCase();
-    const regex = new RegExp(`\b${wordLower}\b`, 'i');
-    const blanked = sentence.replace(regex, '______');
-
-    // 生成干扰选项（从其他单词中随机选）
-    const distractors = shuffle(ALL_WORDS.filter(w => w.word !== q.word && w.word.length > 3)).slice(0, 3).map(w => w.word);
-    const options = shuffle([q.word, ...distractors]);
-
-    card.className = 'word-card';
-    card.innerHTML = `
-        <div class="card-badge badge-prefix">例句填空</div>
-        <div class="word-main" style="margin-bottom:20px;">
-            <div style="font-size:16px;color:var(--text-muted);margin-bottom:8px;">请根据句意选择正确的单词</div>
-        </div>
-        <div class="example-box" style="font-size:17px;line-height:1.8;margin-bottom:24px;">
-            <div class="en">${esc(blanked)}</div>
-        </div>
-        <div class="meaning-section">
-            <h3>提示</h3>
-            <div style="font-size:15px;color:var(--text-muted);margin-bottom:16px;">
-                词根: ${esc(q.root)} | 词性: ${esc(q.pos)} | 释义: ${esc(q.meaning)}
-            </div>
-        </div>
-        <div class="sentence-options" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">
-            ${options.map((opt, idx) => `
-                <button class="sentence-opt-btn" data-answer="${esc(opt)}" onclick="selectSentenceAnswer(this, '${esc(opt)}', '${esc(q.word)}')"
-                    style="padding:14px 16px;background:var(--bg-elevated);border:2px solid var(--border);border-radius:12px;color:var(--text);font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;text-align:center;">
-                    ${esc(opt)}
-                </button>
-            `).join('')}
-        </div>
-        <div id="sentence-feedback" style="margin-top:16px;text-align:center;font-weight:600;font-size:16px;min-height:24px;"></div>
-    `;
-
-    const actionBar = document.getElementById('action-bar');
-    actionBar.innerHTML = `<button class="action-btn btn-next" onclick="nextSentence()"><span>⏭</span> 下一题</button>`;
-}
-
-function selectSentenceAnswer(btn, selected, correct) {
-    // 禁用所有按钮
-    document.querySelectorAll('.sentence-opt-btn').forEach(b => {
-        b.disabled = true;
-        b.style.cursor = 'default';
-    });
-
-    const feedback = document.getElementById('sentence-feedback');
-    const isCorrect = selected === correct;
-
-    if (isCorrect) {
-        btn.style.background = 'linear-gradient(135deg, var(--accent), #059669)';
-        btn.style.borderColor = 'var(--accent)';
-        btn.style.color = 'white';
-        feedback.innerHTML = '<span style="color:var(--accent)">✅ 正确！</span>';
-        sentenceMode.score++;
-        ProgressTracker.record(correct, true, 'sentence');
-    } else {
-        btn.style.background = 'var(--danger)';
-        btn.style.borderColor = 'var(--danger)';
-        btn.style.color = 'white';
-        feedback.innerHTML = '<span style="color:var(--danger)">❌ 正确答案是：' + esc(correct) + '</span>';
-        ProgressTracker.record(correct, false, 'sentence');
-        FavoritesManager.add(correct, sentenceMode.pool[sentenceMode.index].root, sentenceMode.pool[sentenceMode.index].type, '例句填空错误');
-
-        // 高亮正确答案
-        document.querySelectorAll('.sentence-opt-btn').forEach(b => {
-            if (b.dataset.answer === correct) {
-                b.style.background = 'linear-gradient(135deg, var(--accent), #059669)';
-                b.style.borderColor = 'var(--accent)';
-                b.style.color = 'white';
-            }
-        });
-    }
-
-    setTimeout(() => nextSentence(), 1500);
-}
-
-function nextSentence() {
-    sentenceMode.index++;
-    if (sentenceMode.index >= sentenceMode.pool.length) {
-        showSentenceComplete();
-    } else {
-        showSentenceCard();
-    }
-}
-
-function showSentenceComplete() {
-    const container = document.getElementById('card-container');
-    const total = sentenceMode.pool.length;
-    const score = sentenceMode.score;
-    const accuracy = Math.round((score/total)*100);
-
-    container.innerHTML = `
-        <div class="complete-screen">
-            <div class="complete-icon">📖</div>
-            <div class="complete-title">例句填空完成！</div>
-            <div class="complete-stats">
-                <div class="complete-stat"><div class="num" style="color:var(--primary)">${total}</div><div class="label">总题数</div></div>
-                <div class="complete-stat"><div class="num" style="color:var(--accent)">${score}</div><div class="label">正确</div></div>
-                <div class="complete-stat"><div class="num" style="color:var(--secondary)">${accuracy}%</div><div class="label">准确率</div></div>
-            </div>
-            <button class="cta-button" onclick="startSentenceMode()">再来一组</button>
-            <button class="cta-button" style="margin-top:12px;background:var(--bg-elevated);color:var(--text);" onclick="switchView('home')">返回首页</button>
-        </div>
-    `;
-    document.getElementById('action-bar').innerHTML = '';
-    sentenceMode.active = false;
-}
-</script>
-
-<!-- ===== 新增功能：拼写练习模式 ===== -->
-<script>
-let spellMode = {
-    active: false,
-    pool: [],
-    index: 0,
-    score: 0,
-    currentInput: ''
-};
-
-function startSpellMode() {
-    if (!ALL_WORDS || ALL_WORDS.length === 0) {
-        showToast('词库尚未加载');
-        return;
-    }
-    // 选择有音标和释义的单词
-    const pool = ALL_WORDS.filter(w => w.pronunciation && w.meaning);
-    if (pool.length === 0) {
-        showToast('暂无拼写练习数据');
-        return;
-    }
-    spellMode.pool = shuffle(pool).slice(0, 15);
-    spellMode.index = 0;
-    spellMode.score = 0;
-    spellMode.active = true;
-    switchView('study');
-    showSpellCard();
-}
-
-function showSpellCard() {
-    const q = spellMode.pool[spellMode.index];
-    const card = document.getElementById('word-card');
-    const total = spellMode.pool.length;
-    const current = spellMode.index + 1;
-
-    document.getElementById('progress-text').textContent = current + ' / ' + total;
-    document.getElementById('progress-percent').textContent = Math.round((current/total)*100) + '%';
-    document.getElementById('progress-fill').style.width = (current/total)*100 + '%';
-
-    spellMode.currentInput = '';
-
-    // 生成提示字母（显示首字母和部分字母）
-    const word = q.word;
-    let hint = '';
-    if (word.length <= 4) {
-        hint = word[0] + '_'.repeat(word.length - 1);
-    } else if (word.length <= 7) {
-        hint = word[0] + '_'.repeat(Math.floor(word.length/2)) + word.substring(Math.floor(word.length/2)+1);
-    } else {
-        hint = word[0] + '_'.repeat(3) + word[4] + '_'.repeat(word.length - 5);
-    }
-
-    card.className = 'word-card';
-    card.innerHTML = `
-        <div class="card-badge badge-suffix">拼写练习</div>
-        <div class="word-main" style="margin-bottom:20px;">
-            <div style="font-size:16px;color:var(--text-muted);margin-bottom:12px;">根据音标和释义拼写单词</div>
-            <div class="word-pronunciation" style="font-size:22px;margin-bottom:8px;">${esc(q.pronunciation)}</div>
-            <div style="font-size:18px;color:var(--text);font-weight:600;">${esc(q.meaning)}</div>
-            <div style="font-size:14px;color:var(--text-muted);margin-top:8px;">词根: ${esc(q.root)} | 词性: ${esc(q.pos)}</div>
-        </div>
-        <div class="divider"></div>
-        <div style="text-align:center;margin:24px 0;">
-            <div id="spell-hint" style="font-size:32px;font-weight:800;letter-spacing:8px;font-family:monospace;color:var(--primary-light);margin-bottom:16px;">${esc(hint)}</div>
-            <input type="text" id="spell-input" placeholder="输入单词..." 
-                style="width:100%;max-width:300px;padding:14px 20px;font-size:20px;text-align:center;background:var(--bg);border:2px solid var(--border);border-radius:12px;color:var(--text);font-family:monospace;letter-spacing:2px;"
-                onkeydown="if(event.key==='Enter')checkSpell()" autocomplete="off" spellcheck="false">
-        </div>
-        <div id="spell-feedback" style="text-align:center;font-weight:600;font-size:16px;min-height:24px;"></div>
-    `;
-
-    setTimeout(() => document.getElementById('spell-input')?.focus(), 100);
-
-    const actionBar = document.getElementById('action-bar');
-    actionBar.innerHTML = `
-        <button class="action-btn btn-next" onclick="skipSpell()"><span>⏭</span> 跳过</button>
-        <button class="action-btn btn-reveal" onclick="checkSpell()"><span>✓</span> 确认</button>
-    `;
-}
-
-function checkSpell() {
-    const input = document.getElementById('spell-input');
-    const q = spellMode.pool[spellMode.index];
-    const feedback = document.getElementById('spell-feedback');
-    const userAnswer = input.value.trim().toLowerCase();
-    const correct = q.word.toLowerCase();
-
-    if (!userAnswer) {
-        feedback.innerHTML = '<span style="color:var(--secondary)">请输入单词</span>';
-        return;
-    }
-
-    input.disabled = true;
-
-    if (userAnswer === correct) {
-        feedback.innerHTML = '<span style="color:var(--accent)">✅ 拼写正确！</span>';
-        spellMode.score++;
-        ProgressTracker.record(q.word, true, 'spelling');
-        setTimeout(() => nextSpell(), 1500);
-    } else {
-        feedback.innerHTML = '<span style="color:var(--danger)">❌ 正确拼写：' + esc(q.word) + '</span>';
-        ProgressTracker.record(q.word, false, 'spelling');
-        FavoritesManager.add(q.word, q.root, q.type, '拼写错误');
-
-        // 显示正确拼写对比
-        const hintDiv = document.getElementById('spell-hint');
-        let comparison = '';
-        for (let i = 0; i < Math.max(userAnswer.length, correct.length); i++) {
-            if (i < correct.length && i < userAnswer.length && userAnswer[i] === correct[i]) {
-                comparison += '<span style="color:var(--accent)">' + correct[i] + '</span>';
-            } else if (i < correct.length) {
-                comparison += '<span style="color:var(--danger)">' + (correct[i] || '') + '</span>';
-            }
-        }
-        hintDiv.innerHTML = comparison;
-
-        setTimeout(() => nextSpell(), 2500);
-    }
-}
-
-function skipSpell() {
-    nextSpell();
-}
-
-function nextSpell() {
-    spellMode.index++;
-    if (spellMode.index >= spellMode.pool.length) {
-        showSpellComplete();
-    } else {
-        showSpellCard();
-    }
-}
-
-function showSpellComplete() {
-    const container = document.getElementById('card-container');
-    const total = spellMode.pool.length;
-    const score = spellMode.score;
-    const accuracy = Math.round((score/total)*100);
-
-    container.innerHTML = `
-        <div class="complete-screen">
-            <div class="complete-icon">✍️</div>
-            <div class="complete-title">拼写练习完成！</div>
-            <div class="complete-stats">
-                <div class="complete-stat"><div class="num" style="color:var(--primary)">${total}</div><div class="label">总题数</div></div>
-                <div class="complete-stat"><div class="num" style="color:var(--accent)">${score}</div><div class="label">正确</div></div>
-                <div class="complete-stat"><div class="num" style="color:var(--secondary)">${accuracy}%</div><div class="label">准确率</div></div>
-            </div>
-            <button class="cta-button" onclick="startSpellMode()">再来一组</button>
-            <button class="cta-button" style="margin-top:12px;background:var(--bg-elevated);color:var(--text);" onclick="switchView('home')">返回首页</button>
-        </div>
-    `;
-    document.getElementById('action-bar').innerHTML = '';
-    spellMode.active = false;
-}
-</script>
-
-<!-- ===== 新增功能：错题本/收藏夹页面 ===== -->
-<script>
-function renderFavorites() {
-    const favorites = FavoritesManager.getAll();
-    const container = document.getElementById('favorites-list');
-
-    if (!container) return;
-
-    if (favorites.length === 0) {
-        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">暂无收藏单词<br><span style="font-size:14px;">在练习中答错的单词会自动加入这里</span></div>';
-        return;
-    }
-
-    container.innerHTML = favorites.map(item => {
-        const wordData = ALL_WORDS.find(w => w.word === item.word);
-        return `
-            <div class="fav-item" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s;">
-                <div style="flex:1;">
-                    <div style="font-size:18px;font-weight:700;color:var(--primary-light);margin-bottom:4px;">${esc(item.word)}</div>
-                    <div style="font-size:13px;color:var(--text-muted);">
-                        词根: ${esc(item.root)} | 类型: ${esc(item.type)} | 原因: ${esc(item.reason)}
-                        ${item.reviewCount > 0 ? ` | 已复习${item.reviewCount}次` : ''}
-                    </div>
-                    ${wordData ? `<div style="font-size:14px;color:var(--text);margin-top:6px;">${esc(wordData.meaning || '')}</div>` : ''}
-                </div>
-                <button onclick="removeFavorite('${esc(item.word)}')" style="background:none;border:none;color:var(--danger);font-size:20px;cursor:pointer;padding:8px;border-radius:8px;transition:all 0.2s;" title="移除">🗑</button>
-            </div>
-        `;
-    }).join('');
-}
-
-function removeFavorite(word) {
-    FavoritesManager.remove(word);
-    renderFavorites();
-    showToast('已移除: ' + word);
-}
-
-function startFavoritesReview() {
-    const favorites = FavoritesManager.getAll();
-    if (favorites.length === 0) {
-        showToast('错题本为空');
-        return;
-    }
-    // 将收藏单词转为学习模式
-    const favWords = favorites.map(f => ALL_WORDS.find(w => w.word === f.word)).filter(Boolean);
-    if (favWords.length === 0) {
-        showToast('无法找到收藏单词的数据');
-        return;
-    }
-    studyWords = shuffle(favWords);
-    studyIndex = 0;
-    studyRevealed = false;
-    switchView('study');
-    showStudyCard();
-    showToast('开始复习错题本 (' + studyWords.length + ' 词)');
-}
-</script>
-
-<!-- ===== 新增功能：学习统计面板 ===== -->
-<script>
-function renderStats() {
-    const stats = ProgressTracker.getStats();
-    const words = Object.keys(stats);
-    const totalAttempts = words.reduce((sum, w) => sum + stats[w].attempts, 0);
-    const totalCorrect = words.reduce((sum, w) => sum + stats[w].correct, 0);
-    const mastery = ProgressTracker.getMasteryLevel();
-    const weakWords = ProgressTracker.getWeakWords();
-
-    const container = document.getElementById('stats-panel');
-    if (!container) return;
-
-    container.innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:24px;">
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">
-                <div style="font-size:32px;font-weight:800;color:var(--primary);">${words.length}</div>
-                <div style="font-size:13px;color:var(--text-muted);">已练习单词</div>
-            </div>
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">
-                <div style="font-size:32px;font-weight:800;color:var(--accent);">${totalAttempts}</div>
-                <div style="font-size:13px;color:var(--text-muted);">总答题次数</div>
-            </div>
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">
-                <div style="font-size:32px;font-weight:800;color:var(--secondary);">${totalCorrect > 0 ? Math.round((totalCorrect/totalAttempts)*100) : 0}%</div>
-                <div style="font-size:13px;color:var(--text-muted);">整体正确率</div>
-            </div>
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">
-                <div style="font-size:32px;font-weight:800;color:var(--primary-light);">${mastery}%</div>
-                <div style="font-size:13px;color:var(--text-muted);">掌握度</div>
-            </div>
-        </div>
-
-        ${weakWords.length > 0 ? `
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;">
-            <h3 style="font-size:16px;color:var(--danger);margin-bottom:12px;">⚠️ 薄弱单词 (需重点复习)</h3>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                ${weakWords.slice(0, 10).map(w => `
-                    <span style="padding:6px 14px;background:rgba(239,68,68,0.15);color:var(--danger);border-radius:20px;font-size:13px;font-weight:500;">
-                        ${esc(w.word)} (${w.correct}/${w.attempts})
-                    </span>
-                `).join('')}
-            </div>
-        </div>
-        ` : ''}
-
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;">
-            <h3 style="font-size:16px;color:var(--text);margin-bottom:12px;">📊 各模式练习情况</h3>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-                ${['flashcard', 'decomposition', 'sentence', 'spelling'].map(mode => {
-                    const modeWords = words.filter(w => stats[w].modes.includes(mode));
-                    const modeAttempts = modeWords.reduce((s, w) => s + stats[w].attempts, 0);
-                    const modeCorrect = modeWords.reduce((s, w) => s + stats[w].correct, 0);
-                    const modeName = {flashcard:'闪卡',decomposition:'拆解',sentence:'例句',spelling:'拼写'}[mode];
-                    return modeWords.length > 0 ? `
-                        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-                            <span style="color:var(--text-muted);font-size:14px;">${modeName}</span>
-                            <span style="color:var(--text);font-size:14px;font-weight:500;">${modeWords.length}词 · ${modeCorrect}/${modeAttempts}正确</span>
-                        </div>
-                    ` : '';
-                }).join('') || '<div style="color:var(--text-muted);font-size:14px;">暂无练习记录</div>'}
-            </div>
-        </div>
-    `;
-}
-</script>
-
-<!-- ===== 新增功能：智能复习提醒 ===== -->
-<script>
-const ReviewScheduler = {
-    // 艾宾浩斯遗忘曲线间隔（分钟）: 20分钟, 1小时, 9小时, 1天, 2天, 6天, 31天
-    intervals: [20, 60, 540, 1440, 2880, 8640, 44640],
-
-    getKey() { return 'vocab_reviews_' + (localStorage.getItem('vocab-user-id') || 'default'); },
-
-    getSchedule() {
-        try { return JSON.parse(localStorage.getItem(this.getKey()) || '{}'); }
-        catch(e) { return {}; }
-    },
-
-    schedule(word) {
-        const schedule = this.getSchedule();
-        if (!schedule[word]) {
-            schedule[word] = { stage: 0, nextReview: Date.now() + this.intervals[0] * 60000, history: [] };
-        } else {
-            const stage = schedule[word].stage;
-            if (stage < this.intervals.length - 1) {
-                schedule[word].stage++;
-                schedule[word].nextReview = Date.now() + this.intervals[schedule[word].stage] * 60000;
-            }
-        }
-        schedule[word].history.push(Date.now());
-        localStorage.setItem(this.getKey(), JSON.stringify(schedule));
-    },
-
-    getDueReviews() {
-        const schedule = this.getSchedule();
-        const now = Date.now();
-        return Object.entries(schedule)
-            .filter(([_, data]) => data.nextReview <= now)
-            .map(([word, data]) => ({ word, stage: data.stage, due: new Date(data.nextReview) }));
-    },
-
-    showNotification() {
-        const due = this.getDueReviews();
-        if (due.length > 0) {
-            showToast('📅 有 ' + due.length + ' 个单词待复习！');
-        }
-    }
-};
-
-// 页面加载时检查复习
-setTimeout(() => ReviewScheduler.showNotification(), 3000);
-</script>
-
-<!-- ===== 修改原有函数以支持新功能 ===== -->
-<script>
-// 增强原有的markStudy函数
-const originalMarkStudy = markStudy;
-markStudy = function(known) {
-    const q = studyWords[studyIndex];
-    if (q) {
-        ProgressTracker.record(q.word, known, 'flashcard');
-        if (!known) {
-            FavoritesManager.add(q.word, q.root, q.type, '闪卡不认识');
-        }
-        ReviewScheduler.schedule(q.word);
-    }
-    originalMarkStudy(known);
-};
-
-// 增强原有的switchView函数
-const originalSwitchView = switchView;
-switchView = function(viewName) {
-    originalSwitchView(viewName);
-    if (viewName === 'favorites') {
-        renderFavorites();
-    } else if (viewName === 'stats') {
-        renderStats();
-    }
-};
-</script>
- }
     if (e.key === 'k' || e.key === 'K') {
         if (studyRevealed) markStudy(true);
     }
@@ -2526,6 +1789,802 @@ function initTheme() {
 
 // 页面加载完成后初始化主题
 initTheme();
+
+
+// ===== 学习记录与进度系统 (新增段1) =====
+const STORAGE_KEYS = {
+    WORD_STATUS: 'vocab_word_status',      // 单词状态: { word: 'known'|'unknown'|'new' }
+    STUDY_PROGRESS: 'vocab_study_progress', // 学习进度: { currentIndex, filterType, filterLevel, timestamp }
+    STUDY_HISTORY: 'vocab_study_history',   // 学习历史: [{ date, count, known, unknown }]
+    SESSION_START: 'vocab_session_start'    // 本次学习开始时间
+};
+
+// 获取单词状态
+
+// ===== 收藏/生词本系统 (新增段2) =====
+const FAVORITES_KEY = 'vocab_favorites';
+
+// 获取收藏列表
+function getFavorites() {
+    try {
+        return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+    } catch { return []; }
+}
+
+// 添加收藏
+function addFavorite(wordData) {
+    try {
+        const favs = getFavorites();
+        // 避免重复
+        if (!favs.find(f => f.word === wordData.word)) {
+            favs.push({
+                word: wordData.word,
+                root: wordData.root,
+                type: wordData.type,
+                meaning: wordData.meaning,
+                pronunciation: wordData.pronunciation,
+                pos: wordData.pos,
+                addedAt: Date.now()
+            });
+            localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
+            return true;
+        }
+        return false;
+    } catch (e) { console.error('添加收藏失败:', e); return false; }
+}
+
+// 移除收藏
+function removeFavorite(word) {
+    try {
+        let favs = getFavorites();
+        favs = favs.filter(f => f.word !== word);
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
+        return true;
+    } catch (e) { console.error('移除收藏失败:', e); return false; }
+}
+
+// 检查是否已收藏
+function isFavorite(word) {
+    return getFavorites().some(f => f.word === word);
+}
+
+// 切换收藏状态
+function toggleFavorite(wordData) {
+    if (isFavorite(wordData.word)) {
+        removeFavorite(wordData.word);
+        showToast('已取消收藏');
+        return false;
+    } else {
+        addFavorite(wordData);
+        showToast('已添加到生词本 ⭐');
+        return true;
+    }
+}
+
+// 获取生词本单词数量
+function getFavoritesCount() {
+    return getFavorites().length;
+}
+
+
+function getWordStatus(word) {
+    try {
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEYS.WORD_STATUS) || '{}');
+        return data[word] || 'new';
+    } catch { return 'new'; }
+}
+
+// 设置单词状态
+function setWordStatus(word, status) {
+    try {
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEYS.WORD_STATUS) || '{}');
+        data[word] = status;
+        localStorage.setItem(STORAGE_KEYS.WORD_STATUS, JSON.stringify(data));
+    } catch (e) { console.error('保存单词状态失败:', e); }
+}
+
+// 获取学习进度
+function getStudyProgress() {
+    try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEYS.STUDY_PROGRESS) || '{}');
+    } catch { return {}; }
+}
+
+// 保存学习进度
+function saveStudyProgress() {
+    try {
+        const progress = {
+            currentIndex: studyIndex,
+            filterType: currentFilters.type,
+            filterLevel: currentFilters.level,
+            totalWords: studyWords.length,
+            timestamp: Date.now()
+        };
+        localStorage.setItem(STORAGE_KEYS.STUDY_PROGRESS, JSON.stringify(progress));
+    } catch (e) { console.error('保存进度失败:', e); }
+}
+
+// 记录学习历史（按天统计）
+function recordStudyHistory(known) {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.STUDY_HISTORY) || '[]');
+        let todayRecord = history.find(h => h.date === today);
+        if (!todayRecord) {
+            todayRecord = { date: today, count: 0, known: 0, unknown: 0 };
+            history.push(todayRecord);
+        }
+        todayRecord.count++;
+        if (known) todayRecord.known++;
+        else todayRecord.unknown++;
+        // 只保留最近30天
+        if (history.length > 30) history.shift();
+        localStorage.setItem(STORAGE_KEYS.STUDY_HISTORY, JSON.stringify(history));
+    } catch (e) { console.error('记录历史失败:', e); }
+}
+
+// 恢复学习进度
+function restoreStudyProgress() {
+    const progress = getStudyProgress();
+    if (!progress.timestamp) return false;
+
+    // 检查是否是今天的进度（24小时内）
+    const hoursSince = (Date.now() - progress.timestamp) / (1000 * 60 * 60);
+    if (hoursSince > 24) return false;
+
+    // 恢复筛选器
+    if (progress.filterType) currentFilters.type = progress.filterType;
+    if (progress.filterLevel) currentFilters.level = progress.filterLevel;
+
+    return progress;
+}
+
+// 获取统计数据
+function getStudyStats() {
+    try {
+        const status = JSON.parse(localStorage.getItem(STORAGE_KEYS.WORD_STATUS) || '{}');
+        const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.STUDY_HISTORY) || '[]');
+        const known = Object.values(status).filter(s => s === 'known').length;
+        const unknown = Object.values(status).filter(s => s === 'unknown').length;
+        const total = Object.keys(status).length;
+        return { known, unknown, total, history };
+    } catch { return { known: 0, unknown: 0, total: 0, history: [] }; }
+}
+
+// 清除所有学习记录
+function clearStudyRecords() {
+    Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
+    showToast('学习记录已清除');
+}
+
+
+
+// ===== 复习模式系统 (新增段3) =====
+const REVIEW_SETTINGS_KEY = 'vocab_review_settings';
+
+// 获取复习设置
+function getReviewSettings() {
+    try {
+        return JSON.parse(localStorage.getItem(REVIEW_SETTINGS_KEY) || '{}');
+    } catch { 
+        return { 
+            mode: 'mixed', // 'unknown', 'favorites', 'mixed', 'all'
+            count: 20,
+            includeNew: true 
+        }; 
+    }
+}
+
+// 保存复习设置
+function saveReviewSettings(settings) {
+    localStorage.setItem(REVIEW_SETTINGS_KEY, JSON.stringify(settings));
+}
+
+// 智能生成复习单词列表
+function generateReviewWords() {
+    const settings = getReviewSettings();
+    const mode = settings.mode || 'mixed';
+    const count = settings.count || 20;
+
+    let pool = [];
+
+    if (mode === 'unknown' || mode === 'mixed') {
+        // 优先加入"不认识"的单词
+        const unknownWords = ALL_WORDS.filter(w => getWordStatus(w.word) === 'unknown');
+        pool.push(...unknownWords);
+    }
+
+    if (mode === 'favorites' || mode === 'mixed') {
+        // 加入收藏的单词
+        const favs = getFavorites();
+        const favWords = favs.map(f => {
+            // 在ALL_WORDS中查找完整数据
+            const found = ALL_WORDS.find(w => w.word === f.word);
+            return found || f;
+        }).filter(Boolean);
+        pool.push(...favWords);
+    }
+
+    if (mode === 'all' || (mode === 'mixed' && pool.length < count)) {
+        // 补充其他单词
+        const existingWords = new Set(pool.map(w => w.word));
+        const others = ALL_WORDS.filter(w => !existingWords.has(w.word));
+        pool.push(...shuffle(others));
+    }
+
+    // 去重
+    const seen = new Set();
+    pool = pool.filter(w => {
+        if (seen.has(w.word)) return false;
+        seen.add(w.word);
+        return true;
+    });
+
+    return shuffle(pool).slice(0, count);
+}
+
+// 开始复习模式
+function startReview() {
+    if (!ALL_WORDS || ALL_WORDS.length === 0) {
+        showToast('词库尚未加载');
+        return;
+    }
+
+    const reviewWords = generateReviewWords();
+    if (reviewWords.length === 0) {
+        showToast('没有需要复习的单词，先去学习吧！');
+        return;
+    }
+
+    studyWords = reviewWords;
+    studyIndex = 0;
+    studyRevealed = false;
+
+    switchView('study');
+    showStudyCard();
+    showToast(`开始复习 ${reviewWords.length} 个单词`);
+}
+
+// 获取复习建议
+function getReviewSuggestion() {
+    const stats = getStudyStats();
+    const favCount = getFavoritesCount();
+
+    const suggestions = [];
+    if (stats.unknown > 0) {
+        suggestions.push(`有 ${stats.unknown} 个"不认识"的单词需要复习`);
+    }
+    if (favCount > 0) {
+        suggestions.push(`生词本中有 ${favCount} 个收藏单词`);
+    }
+    if (stats.total === 0) {
+        suggestions.push('开始学习来积累你的词汇量吧！');
+    } else if (stats.known > 0 && stats.known / stats.total > 0.8) {
+        suggestions.push('掌握率很高！尝试学习更多新单词');
+    }
+
+    return suggestions;
+}
+
+
+
+// ===== 单词详情弹窗系统 (新增段4) =====
+
+// 显示单词详情弹窗
+function showWordDetail(word) {
+    // 查找单词数据
+    const wordData = ALL_WORDS.find(w => w.word === word);
+    if (!wordData) return;
+
+    // 创建弹窗
+    const existing = document.getElementById('word-detail-modal');
+    if (existing) existing.remove();
+
+    const status = getWordStatus(word);
+    const favorited = isFavorite(word);
+
+    const statusBadge = status === 'known' 
+        ? '<span style="background:rgba(16,185,129,0.2);color:#10b981;padding:2px 10px;border-radius:10px;font-size:12px;">✅ 已掌握</span>'
+        : status === 'unknown' 
+        ? '<span style="background:rgba(239,68,68,0.2);color:#ef4444;padding:2px 10px;border-radius:10px;font-size:12px;">❌ 需复习</span>'
+        : '<span style="background:var(--bg-elevated);color:var(--text-muted);padding:2px 10px;border-radius:10px;font-size:12px;">🆕 未学习</span>';
+
+    const modal = document.createElement('div');
+    modal.id = 'word-detail-modal';
+    modal.style.cssText = `
+        position: fixed; inset: 0; z-index: 300;
+        background: rgba(0,0,0,0.7);
+        display: flex; align-items: center; justify-content: center;
+        padding: 20px; backdrop-filter: blur(8px);
+        animation: fadeIn 0.3s ease;
+    `;
+
+    modal.innerHTML = `
+        <div style="
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); max-width: 500px; width: 100%;
+            max-height: 80vh; overflow-y: auto;
+            box-shadow: var(--shadow); position: relative;
+            animation: slideIn 0.3s ease;
+        ">
+            <button onclick="closeWordDetail()" style="
+                position: absolute; top: 16px; right: 16px;
+                background: none; border: none; color: var(--text-muted);
+                font-size: 20px; cursor: pointer; padding: 4px;
+                border-radius: 8px; transition: var(--transition);
+            " onmouseover="this.style.background='var(--bg-elevated)'" 
+               onmouseout="this.style.background='none'">✕</button>
+
+            <div style="padding: 32px;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+                    <h2 style="font-size:32px;font-weight:800;margin:0;">${esc(wordData.word)}</h2>
+                    ${statusBadge}
+                </div>
+
+                <div style="color:var(--text-muted);font-size:16px;margin-bottom:8px;font-family:Georgia,serif;font-style:italic;">
+                    ${esc(wordData.pronunciation)}
+                </div>
+                <div style="display:inline-block;padding:4px 12px;background:var(--bg-elevated);border-radius:8px;font-size:13px;color:var(--text-muted);margin-bottom:20px;">
+                    ${esc(wordData.pos)} · ${wordData.level === 'example' ? '示例词' : '扩展词'}
+                </div>
+
+                <div style="background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(16,185,129,0.05));border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;">
+                    <div style="font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">释义</div>
+                    <div style="font-size:20px;color:var(--text);font-weight:600;line-height:1.5;">${esc(wordData.meaning)}</div>
+                </div>
+
+                ${wordData.etymology ? `
+                <div style="margin-bottom:16px;">
+                    <div style="font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">拆解</div>
+                    <div style="font-family:monospace;font-size:15px;color:var(--primary-light);background:var(--bg);padding:12px;border-radius:var(--radius-sm);border-left:3px solid var(--primary);">${esc(wordData.etymology)}</div>
+                </div>
+                ` : ''}
+
+                ${wordData.explanation ? `
+                <div style="margin-bottom:16px;">
+                    <div style="font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">解析</div>
+                    <div style="font-size:15px;color:var(--text-muted);line-height:1.8;">${esc(wordData.explanation)}</div>
+                </div>
+                ` : ''}
+
+                ${wordData.sentence ? `
+                <div style="background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(16,185,129,0.05));border-radius:var(--radius-sm);padding:16px;border-left:3px solid var(--accent);margin-bottom:20px;">
+                    <div style="font-size:15px;color:var(--text);line-height:1.7;margin-bottom:8px;">${esc(wordData.sentence)}</div>
+                </div>
+                ` : ''}
+
+                <div style="display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;">
+                    <button onclick="toggleFavoriteFromDetail('${esc(wordData.word)}')" id="detail-fav-btn" style="
+                        flex:1; padding:12px; border-radius:10px; border:1px solid var(--border);
+                        background: ${favorited ? 'rgba(245,158,11,0.2)' : 'var(--bg-elevated)'};
+                        color: ${favorited ? 'var(--secondary)' : 'var(--text)'};
+                        font-size:14px; font-weight:600; cursor:pointer; transition:var(--transition);
+                    ">${favorited ? '⭐ 已收藏' : '☆ 收藏'}</button>
+
+                    <button onclick="markWordFromDetail('${esc(wordData.word)}', true)" style="
+                        flex:1; padding:12px; border-radius:10px; border:none;
+                        background: linear-gradient(135deg, var(--accent), #059669);
+                        color: white; font-size:14px; font-weight:600; cursor:pointer;
+                    ">✅ 标记为认识</button>
+
+                    <button onclick="markWordFromDetail('${esc(wordData.word)}', false)" style="
+                        flex:1; padding:12px; border-radius:10px; border:none;
+                        background: linear-gradient(135deg, var(--danger), #dc2626);
+                        color: white; font-size:14px; font-weight:600; cursor:pointer;
+                    ">❌ 标记为不认识</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeWordDetail();
+    });
+
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+}
+
+function closeWordDetail() {
+    const modal = document.getElementById('word-detail-modal');
+    if (modal) {
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            modal.remove();
+            document.body.style.overflow = '';
+        }, 300);
+    }
+}
+
+function toggleFavoriteFromDetail(word) {
+    const wordData = ALL_WORDS.find(w => w.word === word);
+    if (wordData) {
+        const result = toggleFavorite(wordData);
+        const btn = document.getElementById('detail-fav-btn');
+        if (btn) {
+            btn.textContent = result ? '⭐ 已收藏' : '☆ 收藏';
+            btn.style.background = result ? 'rgba(245,158,11,0.2)' : 'var(--bg-elevated)';
+            btn.style.color = result ? 'var(--secondary)' : 'var(--text)';
+        }
+    }
+}
+
+function markWordFromDetail(word, known) {
+    setWordStatus(word, known ? 'known' : 'unknown');
+    recordStudyHistory(known);
+    showToast(known ? '已标记为认识 ✅' : '已标记为不认识，会优先复习 ❌');
+    // 刷新弹窗
+    showWordDetail(word);
+}
+
+// 增强学习卡片：添加收藏按钮和状态显示
+function enhanceStudyCard() {
+    const card = document.getElementById('word-card');
+    if (!card || !studyWords[studyIndex]) return;
+
+    const wordData = studyWords[studyIndex];
+    const favorited = isFavorite(wordData.word);
+    const status = getWordStatus(wordData.word);
+
+    // 在卡片顶部添加操作栏
+    const existingActions = card.querySelector('.card-actions');
+    if (existingActions) existingActions.remove();
+
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'card-actions';
+    actionsDiv.style.cssText = 'position:absolute;top:16px;left:16px;display:flex;gap:8px;z-index:2;';
+
+    const favBtn = document.createElement('button');
+    favBtn.innerHTML = favorited ? '⭐' : '☆';
+    favBtn.title = favorited ? '已收藏' : '收藏';
+    favBtn.style.cssText = `
+        width:32px;height:32px;border-radius:50%;border:none;
+        background:${favorited ? 'rgba(245,158,11,0.2)' : 'var(--bg-elevated)'};
+        color:${favorited ? 'var(--secondary)' : 'var(--text-muted)'};
+        font-size:16px;cursor:pointer;transition:var(--transition);
+        display:flex;align-items:center;justify-content:center;
+    `;
+    favBtn.onmouseover = () => favBtn.style.transform = 'scale(1.1)';
+    favBtn.onmouseout = () => favBtn.style.transform = 'scale(1)';
+    favBtn.onclick = () => {
+        const result = toggleFavorite(wordData);
+        favBtn.innerHTML = result ? '⭐' : '☆';
+        favBtn.style.background = result ? 'rgba(245,158,11,0.2)' : 'var(--bg-elevated)';
+        favBtn.style.color = result ? 'var(--secondary)' : 'var(--text-muted)';
+    };
+
+    if (status !== 'new') {
+        const statusTag = document.createElement('span');
+        statusTag.innerHTML = status === 'known' ? '✅' : '❌';
+        statusTag.title = status === 'known' ? '之前标记为认识' : '之前标记为不认识';
+        statusTag.style.cssText = `
+            width:32px;height:32px;border-radius:50%;
+            background:var(--bg-elevated);color:var(--text-muted);
+            font-size:14px;display:flex;align-items:center;justify-content:center;
+        `;
+        actionsDiv.appendChild(statusTag);
+    }
+
+    actionsDiv.appendChild(favBtn);
+    card.appendChild(actionsDiv);
+}
+
+
+
+// ===== 视图切换增强 (覆盖原有函数) =====
+const originalSwitchView = switchView;
+switchView = function(viewName) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const target = document.getElementById('view-' + viewName);
+    if (target) target.classList.add('active');
+
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.remove('active');
+        const onclick = tab.getAttribute('onclick') || '';
+        if (onclick.includes("'" + viewName + "'")) tab.classList.add('active');
+    });
+
+    // 根据视图更新内容
+    if (viewName === 'review') updateReviewPage();
+    if (viewName === 'favorites') renderFavoritesPage();
+    if (viewName === 'stats') renderStatsPage();
+};
+
+// ===== 复习页面更新 =====
+function updateReviewPage() {
+    const stats = getStudyStats();
+    const favCount = getFavoritesCount();
+
+    const unknownEl = document.getElementById('review-unknown-count');
+    const favEl = document.getElementById('review-fav-count');
+    const mixedEl = document.getElementById('review-mixed-count');
+    const suggestionsEl = document.getElementById('review-suggestions');
+
+    if (unknownEl) unknownEl.textContent = stats.unknown;
+    if (favEl) favEl.textContent = favCount;
+    if (mixedEl) mixedEl.textContent = stats.unknown + favCount;
+
+    if (suggestionsEl) {
+        const suggestions = getReviewSuggestion();
+        if (suggestions.length > 0) {
+            suggestionsEl.innerHTML = suggestions.map(s => `<div>• ${s}</div>`).join('');
+        } else {
+            suggestionsEl.innerHTML = '<div style="color:var(--text-muted);">继续学习来积累更多数据！</div>';
+        }
+    }
+}
+
+function startReviewMode(mode) {
+    saveReviewSettings({ ...getReviewSettings(), mode });
+    startReview();
+}
+
+// ===== 生词本页面渲染 =====
+function renderFavoritesPage() {
+    const grid = document.getElementById('favorites-grid');
+    const empty = document.getElementById('fav-empty');
+    const countEl = document.getElementById('fav-total-count');
+
+    if (!grid) return;
+
+    const favs = getFavorites();
+    if (countEl) countEl.textContent = favs.length;
+
+    if (favs.length === 0) {
+        grid.innerHTML = '';
+        if (empty) empty.style.display = 'block';
+        return;
+    }
+
+    if (empty) empty.style.display = 'none';
+    grid.innerHTML = favs.map(f => `
+        <div class="browse-card" style="position:relative;">
+            <button onclick="event.stopPropagation();removeFavorite('${esc(f.word)}');renderFavoritesPage();" 
+                style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--danger);font-size:18px;cursor:pointer;padding:4px;border-radius:4px;"
+                title="移除">✕</button>
+            <div class="browse-card-header" onclick="showWordDetail('${esc(f.word)}')" style="cursor:pointer;">
+                <div class="browse-card-title">${esc(f.word)}</div>
+            </div>
+            <div class="browse-card-desc" onclick="showWordDetail('${esc(f.word)}')" style="cursor:pointer;">
+                ${esc(f.pronunciation || '')} ${esc(f.pos || '')}<br>
+                ${esc(f.meaning || '')}
+            </div>
+            <div class="browse-card-words">
+                <span class="word-chip">${esc(f.root || '')}</span>
+                <span class="word-chip">${f.type === 'prefix' ? '前缀' : f.type === 'suffix' ? '后缀' : '词根'}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function clearAllFavorites() {
+    if (!confirm('确定要清空生词本吗？此操作不可恢复。')) return;
+    localStorage.removeItem(FAVORITES_KEY);
+    renderFavoritesPage();
+    showToast('生词本已清空');
+}
+
+// ===== 统计页面渲染 =====
+function renderStatsPage() {
+    const stats = getStudyStats();
+    const today = new Date().toISOString().split('T')[0];
+    const todayRecord = stats.history.find(h => h.date === today);
+
+    const totalEl = document.getElementById('stat-total-learned');
+    const knownEl = document.getElementById('stat-known');
+    const unknownEl = document.getElementById('stat-unknown');
+    const masteryEl = document.getElementById('stat-mastery');
+    const todayEl = document.getElementById('today-stats');
+    const chartEl = document.getElementById('stats-chart');
+
+    if (totalEl) totalEl.textContent = stats.total;
+    if (knownEl) knownEl.textContent = stats.known;
+    if (unknownEl) unknownEl.textContent = stats.unknown;
+    if (masteryEl) {
+        const rate = stats.total > 0 ? Math.round((stats.known / stats.total) * 100) : 0;
+        masteryEl.textContent = rate + '%';
+    }
+
+    if (todayEl) {
+        if (todayRecord) {
+            todayEl.innerHTML = `
+                <div>📚 今日学习: <strong>${todayRecord.count}</strong> 个单词</div>
+                <div>✅ 认识: <strong>${todayRecord.known}</strong> 个</div>
+                <div>❌ 不认识: <strong>${todayRecord.unknown}</strong> 个</div>
+                <div>📈 正确率: <strong>${todayRecord.count > 0 ? Math.round((todayRecord.known / todayRecord.count) * 100) : 0}%</strong></div>
+            `;
+        } else {
+            todayEl.innerHTML = '今天还没有学习记录，开始背单词吧！';
+        }
+    }
+
+    // 渲染最近7天柱状图
+    if (chartEl) {
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const record = stats.history.find(h => h.date === dateStr);
+            last7Days.push({
+                date: dateStr.slice(5),
+                count: record ? record.count : 0,
+                known: record ? record.known : 0
+            });
+        }
+
+        const maxCount = Math.max(...last7Days.map(d => d.count), 1);
+
+        chartEl.innerHTML = last7Days.map(d => {
+            const height = (d.count / maxCount) * 100;
+            const knownHeight = d.count > 0 ? (d.known / d.count) * height : 0;
+            return `
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                    <div style="width:100%;height:${height}%;background:var(--bg-elevated);border-radius:4px;position:relative;overflow:hidden;">
+                        <div style="position:absolute;bottom:0;left:0;right:0;height:${knownHeight}%;background:linear-gradient(180deg,var(--accent),#059669);border-radius:0 0 4px 4px;"></div>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-dim);">${d.date}</div>
+                    <div style="font-size:12px;color:var(--text-muted);font-weight:600;">${d.count}</div>
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+// ===== 增强原有的 markStudy 函数 =====
+const originalMarkStudy = markStudy;
+markStudy = function(known) {
+    const wordData = studyWords[studyIndex];
+    if (wordData) {
+        setWordStatus(wordData.word, known ? 'known' : 'unknown');
+        recordStudyHistory(known);
+    }
+    saveStudyProgress();
+
+    studyIndex++;
+    if (studyIndex >= studyWords.length) {
+        showStudyComplete();
+        localStorage.removeItem(STORAGE_KEYS.STUDY_PROGRESS);
+    } else {
+        studyRevealed = false;
+        showStudyCard();
+    }
+};
+
+// ===== 增强原有的 showStudyCard 函数 =====
+const originalShowStudyCard = showStudyCard;
+showStudyCard = function() {
+    originalShowStudyCard();
+    // 添加收藏按钮和状态显示
+    setTimeout(() => enhanceStudyCard(), 10);
+};
+
+// ===== 增强原有的 showStudyComplete 函数 =====
+const originalShowStudyComplete = showStudyComplete;
+showStudyComplete = function() {
+    const container = document.getElementById('card-container');
+    if (container) {
+        const stats = getStudyStats();
+        const today = new Date().toISOString().split('T')[0];
+        const todayRecord = stats.history.find(h => h.date === today);
+
+        container.innerHTML = `
+            <div class="complete-screen">
+                <div class="complete-icon">🎉</div>
+                <div class="complete-title">练习完成！</div>
+                <div class="complete-stats" style="grid-template-columns: repeat(4, 1fr);">
+                    <div class="complete-stat"><div class="num">${studyWords.length}</div><div class="label">总单词</div></div>
+                    <div class="complete-stat"><div class="num">${todayRecord ? todayRecord.known : 0}</div><div class="label">认识</div></div>
+                    <div class="complete-stat"><div class="num">${todayRecord ? todayRecord.unknown : 0}</div><div class="label">不认识</div></div>
+                    <div class="complete-stat"><div class="num">${stats.total}</div><div class="label">累计学习</div></div>
+                </div>
+                <button class="cta-button" onclick="startStudy()">再来一组</button>
+                <button class="cta-button" style="margin-top:12px;background:var(--bg-elevated);color:var(--text);" onclick="switchView('home')">返回首页</button>
+            </div>
+        `;
+    }
+    document.getElementById('action-bar').innerHTML = '';
+};
+
+// ===== 增强原有的 defaultInitApp 函数 =====
+const originalDefaultInitApp = defaultInitApp;
+defaultInitApp = function() {
+    originalDefaultInitApp();
+
+    // 更新首页统计，加入学习数据
+    const stats = getStudyStats();
+    const favCount = getFavoritesCount();
+
+    // 在首页添加学习进度概览
+    const hero = document.querySelector('.hero');
+    if (hero && stats.total > 0) {
+        const existingOverview = document.getElementById('study-overview');
+        if (!existingOverview) {
+            const overview = document.createElement('div');
+            overview.id = 'study-overview';
+            overview.style.cssText = 'max-width:600px;margin:0 auto 30px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:left;';
+
+            const rate = stats.total > 0 ? Math.round((stats.known / stats.total) * 100) : 0;
+
+            overview.innerHTML = `
+                <div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">学习概览</div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:center;">
+                    <div>
+                        <div style="font-size:24px;font-weight:700;color:var(--primary-light);">${stats.total}</div>
+                        <div style="font-size:12px;color:var(--text-muted);">已学习</div>
+                    </div>
+                    <div>
+                        <div style="font-size:24px;font-weight:700;color:var(--accent);">${stats.known}</div>
+                        <div style="font-size:12px;color:var(--text-muted);">已掌握</div>
+                    </div>
+                    <div>
+                        <div style="font-size:24px;font-weight:700;color:var(--secondary);">${favCount}</div>
+                        <div style="font-size:12px;color:var(--text-muted);">生词本</div>
+                    </div>
+                </div>
+                <div style="margin-top:16px;">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;">
+                        <span>掌握率</span><span>${rate}%</span>
+                    </div>
+                    <div style="width:100%;height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;">
+                        <div style="width:${rate}%;height:100%;background:linear-gradient(90deg,var(--accent),var(--primary));border-radius:3px;transition:width 0.5s;"></div>
+                    </div>
+                </div>
+            `;
+
+            const ctaButton = hero.querySelector('.cta-button');
+            if (ctaButton) {
+                hero.insertBefore(overview, ctaButton);
+            } else {
+                hero.appendChild(overview);
+            }
+        }
+    }
+
+    // 检查是否有上次的学习进度
+    const progress = restoreStudyProgress();
+    if (progress && progress.currentIndex > 0 && progress.currentIndex < progress.totalWords) {
+        const resumeBtn = document.getElementById('resume-study-btn');
+        if (!resumeBtn) {
+            const btn = document.createElement('button');
+            btn.id = 'resume-study-btn';
+            btn.className = 'cta-button';
+            btn.style.cssText = 'margin-top:12px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);';
+            btn.innerHTML = '<span>▶️</span> 继续上次学习';
+            btn.onclick = () => {
+                studyWords = generateReviewWords(); // 重新生成
+                studyIndex = progress.currentIndex;
+                studyRevealed = false;
+                switchView('study');
+                showStudyCard();
+            };
+            const ctaButton = hero.querySelector('.cta-button');
+            if (ctaButton) ctaButton.parentNode.insertBefore(btn, ctaButton.nextSibling);
+        }
+    }
+};
+
+// ===== 增强词库浏览，添加点击事件 =====
+const originalRenderBrowseByCategory = renderBrowseByCategory;
+renderBrowseByCategory = function(category) {
+    originalRenderBrowseByCategory(category);
+
+    // 为单词chip添加点击事件
+    const grid = document.getElementById('browse-grid');
+    if (grid) {
+        grid.querySelectorAll('.word-chip').forEach(chip => {
+            chip.style.cursor = 'pointer';
+            chip.onclick = (e) => {
+                e.stopPropagation();
+                const word = chip.textContent.replace(/^\+\d+/, '').trim();
+                if (word && !word.startsWith('+')) {
+                    showWordDetail(word);
+                }
+            };
+        });
+    }
+};
+
 </script>
 
 
