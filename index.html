@@ -1074,7 +1074,273 @@ body {
   color: var(--primary-light);
 }
 
+
+/* ===== 首页模块卡片 ===== */
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  max-width: 900px;
+  margin: 0 auto 40px;
+}
+
+.module-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  text-align: center;
+  transition: var(--transition);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.module-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.module-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--primary);
+  box-shadow: var(--shadow);
+}
+
+.module-card:hover::before {
+  opacity: 1;
+}
+
+.module-icon {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin: 0 auto 16px;
+  transition: var(--transition);
+}
+
+.module-card:hover .module-icon {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.module-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.module-desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.module-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.module-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+
+/* ===== 选择题模块 ===== */
+.quiz-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.quiz-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.quiz-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.quiz-question {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.quiz-question .label {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.quiz-question .question-text {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.quiz-question .question-sub {
+  font-size: 16px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  font-family: Georgia, serif;
+  font-style: italic;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quiz-option {
+  padding: 16px 20px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+  font-size: 16px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quiz-option:hover {
+  border-color: var(--primary-light);
+  background: rgba(99, 102, 241, 0.05);
+  transform: translateX(4px);
+}
+
+.quiz-option .opt-letter {
+  width: 32px; height: 32px;
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--primary-light);
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.quiz-option:hover .opt-letter {
+  background: var(--primary);
+  color: white;
+}
+
+.quiz-option.correct {
+  border-color: var(--accent) !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+}
+
+.quiz-option.correct .opt-letter {
+  background: var(--accent) !important;
+  color: white !important;
+}
+
+.quiz-option.wrong {
+  border-color: var(--danger) !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.quiz-option.wrong .opt-letter {
+  background: var(--danger) !important;
+  color: white !important;
+}
+
+.quiz-option.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.quiz-feedback {
+  text-align: center;
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+
+.quiz-feedback.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.quiz-feedback.correct-fb {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent);
+}
+
+.quiz-feedback.wrong-fb {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+}
+
+.quiz-next-bar {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+  gap: 12px;
+}
+
+/* 完成页面 */
+.quiz-complete-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 24px 0;
+}
+
+@media (max-width: 640px) {
+  .module-grid { grid-template-columns: 1fr; }
+  .quiz-question .question-text { font-size: 24px; }
+  .quiz-card { padding: 24px; }
+  .quiz-complete-stats { grid-template-columns: 1fr; }
+}
+
 </style>
+<base target="_blank">
 <base target="_blank">
 <base target="_blank">
 <base target="_blank">
@@ -1126,6 +1392,8 @@ body {
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="switchView('home')">🏠 首页</button>
     <button class="nav-tab" onclick="switchView('study')">🎯 背单词</button>
+    <button class="nav-tab" onclick="switchView('word2cn')">🎯 选中文</button>
+    <button class="nav-tab" onclick="switchView('cn2word')">🧩 选单词</button>
     <button class="nav-tab" onclick="switchView('review')">🔄 复习</button>
     <button class="nav-tab" onclick="switchView('favorites')">⭐ 生词本</button>
     <button class="nav-tab" onclick="switchView('stats')">📊 统计</button>
@@ -1161,9 +1429,26 @@ body {
         </div>
       </div>
 
-      <button class="cta-button" onclick="startStudy()">
-        <span>🚀</span> 开始背单词
-      </button>
+      <div class="module-grid">
+        <div class="module-card" onclick="startModule('study')">
+          <div class="module-icon">🎯</div>
+          <div class="module-title">背单词</div>
+          <div class="module-desc">卡片翻转式学习，先猜后看，加深记忆印象</div>
+          <button class="module-btn">开始练习</button>
+        </div>
+        <div class="module-card" onclick="startModule('word2cn')">
+          <div class="module-icon" style="background:linear-gradient(135deg,var(--accent),#059669);">🎯</div>
+          <div class="module-title">单词选中文</div>
+          <div class="module-desc">给出英文单词，从四个选项中选择正确的中文释义</div>
+          <button class="module-btn" style="background:linear-gradient(135deg,var(--accent),#059669);">开始练习</button>
+        </div>
+        <div class="module-card" onclick="startModule('cn2word')">
+          <div class="module-icon" style="background:linear-gradient(135deg,var(--secondary),#d97706);">🧩</div>
+          <div class="module-title">中文选单词</div>
+          <div class="module-desc">给出中文释义，从四个英文选项中选择正确的单词</div>
+          <button class="module-btn" style="background:linear-gradient(135deg,var(--secondary),#d97706);">开始练习</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1237,6 +1522,76 @@ body {
       <!-- 动态内容 -->
     </div>
   </div>
+
+
+  <!-- ===== 单词选中文 ===== -->
+  <div class="view" id="view-word2cn">
+    <div class="study-header">
+      <div class="study-title">🎯 单词选中文</div>
+      <div class="progress-info">
+        <span id="w2c-progress-text">1 / 20</span>
+        <div class="progress-bar">
+          <div class="progress-fill" id="w2c-progress-fill" style="width: 5%"></div>
+        </div>
+        <span id="w2c-progress-percent">5%</span>
+      </div>
+    </div>
+    <div class="quiz-container" id="w2c-container">
+      <div class="quiz-card" id="w2c-card">
+        <div class="quiz-question">
+          <div class="label">请选择该单词的中文含义</div>
+          <div class="question-text" id="w2c-word">example</div>
+          <div class="question-sub" id="w2c-pron">/ɪɡˈzæmpəl/ <span id="w2c-pos">n.</span></div>
+        </div>
+        <div class="quiz-options" id="w2c-options">
+          <!-- 动态选项 -->
+        </div>
+        <div class="quiz-feedback" id="w2c-feedback"></div>
+        <div class="quiz-next-bar" id="w2c-next-bar" style="display:none;">
+          <button class="action-btn btn-next" onclick="w2cNext()">下一个 →</button>
+        </div>
+      </div>
+    </div>
+    <div class="keyboard-hints" style="margin-top:20px;">
+      <span class="kb-hint"><span class="kb-key">1-4</span> 选择选项</span>
+      <span class="kb-hint"><span class="kb-key">Enter</span> 下一题</span>
+    </div>
+  </div>
+
+  <!-- ===== 中文选单词 ===== -->
+  <div class="view" id="view-cn2word">
+    <div class="study-header">
+      <div class="study-title">🧩 中文选单词</div>
+      <div class="progress-info">
+        <span id="c2w-progress-text">1 / 20</span>
+        <div class="progress-bar">
+          <div class="progress-fill" id="c2w-progress-fill" style="width: 5%"></div>
+        </div>
+        <span id="c2w-progress-percent">5%</span>
+      </div>
+    </div>
+    <div class="quiz-container" id="c2w-container">
+      <div class="quiz-card" id="c2w-card">
+        <div class="quiz-question">
+          <div class="label">请选择对应中文释义的英文单词</div>
+          <div class="question-text" id="c2w-meaning" style="font-size:26px;">示例；榜样</div>
+          <div class="question-sub" id="c2w-hint" style="font-size:14px;color:var(--text-dim);">词根提示: <span id="c2w-root-hint">ex-</span></div>
+        </div>
+        <div class="quiz-options" id="c2w-options">
+          <!-- 动态选项 -->
+        </div>
+        <div class="quiz-feedback" id="c2w-feedback"></div>
+        <div class="quiz-next-bar" id="c2w-next-bar" style="display:none;">
+          <button class="action-btn btn-next" onclick="c2wNext()">下一个 →</button>
+        </div>
+      </div>
+    </div>
+    <div class="keyboard-hints" style="margin-top:20px;">
+      <span class="kb-hint"><span class="kb-key">1-4</span> 选择选项</span>
+      <span class="kb-hint"><span class="kb-key">Enter</span> 下一题</span>
+    </div>
+  </div>
+
 
   <!-- ===== 复习模式 ===== -->
   <div class="view" id="view-review">
@@ -1512,10 +1867,10 @@ function switchView(viewName) {
     const target = document.getElementById('view-' + viewName);
     if (target) target.classList.add('active');
 
-    document.querySelectorAll('.nav-tab').forEach((tab, idx) => {
+    document.querySelectorAll('.nav-tab').forEach(tab => {
         tab.classList.remove('active');
-        const map = ['home', 'study', 'browse'];
-        if (map[idx] === viewName) tab.classList.add('active');
+        const onclick = tab.getAttribute('onclick') || '';
+        if (onclick.includes("'" + viewName + "'")) tab.classList.add('active');
     });
 }
 
@@ -2584,6 +2939,304 @@ renderBrowseByCategory = function(category) {
         });
     }
 };
+
+
+// ===== 首页模块入口 =====
+function startModule(mode) {
+    if (mode === 'study') {
+        startStudy();
+    } else if (mode === 'word2cn') {
+        startWord2CN();
+    } else if (mode === 'cn2word') {
+        startCN2Word();
+    }
+}
+
+// ===== 单词选中文模块 =====
+let w2cWords = [];
+let w2cIndex = 0;
+let w2cScore = 0;
+let w2cAnswered = false;
+
+function startWord2CN() {
+    if (!ALL_WORDS || ALL_WORDS.length === 0) {
+        showToast('词库尚未加载或为空');
+        return;
+    }
+    switchView('word2cn');
+    prepareW2CWords();
+    showW2CQuestion();
+}
+
+function prepareW2CWords() {
+    let pool = ALL_WORDS.filter(w => w.meaning && w.meaning.trim().length > 0);
+    if (pool.length < 4) pool = [...ALL_WORDS];
+    w2cWords = shuffle(pool).slice(0, Math.min(pool.length, 20));
+    w2cIndex = 0;
+    w2cScore = 0;
+    w2cAnswered = false;
+}
+
+function showW2CQuestion() {
+    const q = w2cWords[w2cIndex];
+    if (!q) return;
+
+    const total = w2cWords.length;
+    const current = w2cIndex + 1;
+    document.getElementById('w2c-progress-text').textContent = current + ' / ' + total;
+    document.getElementById('w2c-progress-percent').textContent = Math.round((current / total) * 100) + '%';
+    document.getElementById('w2c-progress-fill').style.width = (current / total) * 100 + '%';
+
+    document.getElementById('w2c-word').textContent = q.word;
+    document.getElementById('w2c-pron').innerHTML = esc(q.pronunciation || '') + ' <span id="w2c-pos">' + esc(q.pos || '') + '</span>';
+
+    // 生成选项：正确答案 + 3个干扰项
+    const correctAnswer = q.meaning;
+    const distractors = ALL_WORDS
+        .filter(w => w.word !== q.word && w.meaning && w.meaning !== correctAnswer)
+        .map(w => w.meaning);
+    const shuffledDistractors = shuffle(distractors).slice(0, 3);
+    const options = shuffle([correctAnswer, ...shuffledDistractors]);
+
+    const optionsHtml = options.map((opt, idx) => `
+        <div class="quiz-option" onclick="w2cSelect(${idx}, '${esc(opt).replace(/'/g, "\'")}', '${esc(correctAnswer).replace(/'/g, "\'")}')">
+            <span class="opt-letter">${String.fromCharCode(65 + idx)}</span>
+            <span>${esc(opt)}</span>
+        </div>
+    `).join('');
+
+    document.getElementById('w2c-options').innerHTML = optionsHtml;
+    document.getElementById('w2c-feedback').className = 'quiz-feedback';
+    document.getElementById('w2c-feedback').innerHTML = '';
+    document.getElementById('w2c-next-bar').style.display = 'none';
+    w2cAnswered = false;
+}
+
+function w2cSelect(idx, selected, correct) {
+    if (w2cAnswered) return;
+    w2cAnswered = true;
+
+    const options = document.querySelectorAll('#w2c-options .quiz-option');
+    const isCorrect = selected === correct;
+
+    options.forEach((opt, i) => {
+        opt.classList.add('disabled');
+        const optText = opt.querySelector('span:last-child').textContent;
+        if (optText === correct) {
+            opt.classList.add('correct');
+        } else if (i === idx && !isCorrect) {
+            opt.classList.add('wrong');
+        }
+    });
+
+    const feedback = document.getElementById('w2c-feedback');
+    if (isCorrect) {
+        w2cScore++;
+        feedback.className = 'quiz-feedback correct-fb show';
+        feedback.innerHTML = '✅ 回答正确！';
+        // 记录为认识
+        const wordData = w2cWords[w2cIndex];
+        if (wordData) {
+            setWordStatus(wordData.word, 'known');
+            recordStudyHistory(true);
+        }
+    } else {
+        feedback.className = 'quiz-feedback wrong-fb show';
+        feedback.innerHTML = '❌ 回答错误，正确答案是：' + esc(correct);
+        // 记录为不认识
+        const wordData = w2cWords[w2cIndex];
+        if (wordData) {
+            setWordStatus(wordData.word, 'unknown');
+            recordStudyHistory(false);
+        }
+    }
+
+    document.getElementById('w2c-next-bar').style.display = 'flex';
+}
+
+function w2cNext() {
+    w2cIndex++;
+    if (w2cIndex >= w2cWords.length) {
+        showW2CComplete();
+    } else {
+        showW2CQuestion();
+    }
+}
+
+function showW2CComplete() {
+    const container = document.getElementById('w2c-container');
+    const accuracy = w2cWords.length > 0 ? Math.round((w2cScore / w2cWords.length) * 100) : 0;
+    container.innerHTML = `
+        <div class="complete-screen">
+            <div class="complete-icon">🎯</div>
+            <div class="complete-title">单词选中文 完成！</div>
+            <div class="quiz-complete-stats">
+                <div class="complete-stat"><div class="num">${w2cWords.length}</div><div class="label">总题数</div></div>
+                <div class="complete-stat"><div class="num" style="color:var(--accent);">${w2cScore}</div><div class="label">正确</div></div>
+                <div class="complete-stat"><div class="num" style="color:var(--danger);">${w2cWords.length - w2cScore}</div><div class="label">错误</div></div>
+            </div>
+            <div style="font-size:18px;color:var(--text-muted);margin-bottom:24px;">正确率: <strong style="color:var(--primary-light);">${accuracy}%</strong></div>
+            <button class="cta-button" onclick="startWord2CN()">再来一组</button>
+            <button class="cta-button" style="margin-top:12px;background:var(--bg-elevated);color:var(--text);" onclick="switchView('home')">返回首页</button>
+        </div>
+    `;
+}
+
+// ===== 中文选单词模块 =====
+let c2wWords = [];
+let c2wIndex = 0;
+let c2wScore = 0;
+let c2wAnswered = false;
+
+function startCN2Word() {
+    if (!ALL_WORDS || ALL_WORDS.length === 0) {
+        showToast('词库尚未加载或为空');
+        return;
+    }
+    switchView('cn2word');
+    prepareC2WWords();
+    showC2WQuestion();
+}
+
+function prepareC2WWords() {
+    let pool = ALL_WORDS.filter(w => w.meaning && w.meaning.trim().length > 0 && w.word && w.word.trim().length > 0);
+    if (pool.length < 4) pool = [...ALL_WORDS];
+    c2wWords = shuffle(pool).slice(0, Math.min(pool.length, 20));
+    c2wIndex = 0;
+    c2wScore = 0;
+    c2wAnswered = false;
+}
+
+function showC2WQuestion() {
+    const q = c2wWords[c2wIndex];
+    if (!q) return;
+
+    const total = c2wWords.length;
+    const current = c2wIndex + 1;
+    document.getElementById('c2w-progress-text').textContent = current + ' / ' + total;
+    document.getElementById('c2w-progress-percent').textContent = Math.round((current / total) * 100) + '%';
+    document.getElementById('c2w-progress-fill').style.width = (current / total) * 100 + '%';
+
+    document.getElementById('c2w-meaning').textContent = q.meaning;
+    document.getElementById('c2w-root-hint').textContent = q.root || '无';
+
+    // 生成选项：正确答案 + 3个干扰项
+    const correctAnswer = q.word;
+    const distractors = ALL_WORDS
+        .filter(w => w.word !== q.word && w.word && w.word.length > 0)
+        .map(w => w.word);
+    const shuffledDistractors = shuffle(distractors).slice(0, 3);
+    const options = shuffle([correctAnswer, ...shuffledDistractors]);
+
+    const optionsHtml = options.map((opt, idx) => `
+        <div class="quiz-option" onclick="c2wSelect(${idx}, '${esc(opt).replace(/'/g, "\'")}', '${esc(correctAnswer).replace(/'/g, "\'")}')">
+            <span class="opt-letter">${String.fromCharCode(65 + idx)}</span>
+            <span style="font-family:Georgia,serif;font-weight:600;">${esc(opt)}</span>
+        </div>
+    `).join('');
+
+    document.getElementById('c2w-options').innerHTML = optionsHtml;
+    document.getElementById('c2w-feedback').className = 'quiz-feedback';
+    document.getElementById('c2w-feedback').innerHTML = '';
+    document.getElementById('c2w-next-bar').style.display = 'none';
+    c2wAnswered = false;
+}
+
+function c2wSelect(idx, selected, correct) {
+    if (c2wAnswered) return;
+    c2wAnswered = true;
+
+    const options = document.querySelectorAll('#c2w-options .quiz-option');
+    const isCorrect = selected === correct;
+
+    options.forEach((opt, i) => {
+        opt.classList.add('disabled');
+        const optText = opt.querySelector('span:last-child').textContent;
+        if (optText === correct) {
+            opt.classList.add('correct');
+        } else if (i === idx && !isCorrect) {
+            opt.classList.add('wrong');
+        }
+    });
+
+    const feedback = document.getElementById('c2w-feedback');
+    if (isCorrect) {
+        c2wScore++;
+        feedback.className = 'quiz-feedback correct-fb show';
+        feedback.innerHTML = '✅ 回答正确！';
+        const wordData = c2wWords[c2wIndex];
+        if (wordData) {
+            setWordStatus(wordData.word, 'known');
+            recordStudyHistory(true);
+        }
+    } else {
+        feedback.className = 'quiz-feedback wrong-fb show';
+        feedback.innerHTML = '❌ 回答错误，正确答案是：' + esc(correct);
+        const wordData = c2wWords[c2wIndex];
+        if (wordData) {
+            setWordStatus(wordData.word, 'unknown');
+            recordStudyHistory(false);
+        }
+    }
+
+    document.getElementById('c2w-next-bar').style.display = 'flex';
+}
+
+function c2wNext() {
+    c2wIndex++;
+    if (c2wIndex >= c2wWords.length) {
+        showC2WComplete();
+    } else {
+        showC2WQuestion();
+    }
+}
+
+function showC2WComplete() {
+    const container = document.getElementById('c2w-container');
+    const accuracy = c2wWords.length > 0 ? Math.round((c2wScore / c2wWords.length) * 100) : 0;
+    container.innerHTML = `
+        <div class="complete-screen">
+            <div class="complete-icon">🧩</div>
+            <div class="complete-title">中文选单词 完成！</div>
+            <div class="quiz-complete-stats">
+                <div class="complete-stat"><div class="num">${c2wWords.length}</div><div class="label">总题数</div></div>
+                <div class="complete-stat"><div class="num" style="color:var(--accent);">${c2wScore}</div><div class="label">正确</div></div>
+                <div class="complete-stat"><div class="num" style="color:var(--danger);">${c2wWords.length - c2wScore}</div><div class="label">错误</div></div>
+            </div>
+            <div style="font-size:18px;color:var(--text-muted);margin-bottom:24px;">正确率: <strong style="color:var(--primary-light);">${accuracy}%</strong></div>
+            <button class="cta-button" onclick="startCN2Word()">再来一组</button>
+            <button class="cta-button" style="margin-top:12px;background:var(--bg-elevated);color:var(--text);" onclick="switchView('home')">返回首页</button>
+        </div>
+    `;
+}
+
+// ===== 键盘快捷键支持 =====
+document.addEventListener('keydown', (e) => {
+    const w2cView = document.getElementById('view-word2cn');
+    const c2wView = document.getElementById('view-cn2word');
+
+    if (w2cView && w2cView.classList.contains('active')) {
+        if (e.key >= '1' && e.key <= '4' && !w2cAnswered) {
+            const idx = parseInt(e.key) - 1;
+            const options = document.querySelectorAll('#w2c-options .quiz-option');
+            if (options[idx]) options[idx].click();
+        }
+        if (e.key === 'Enter' && w2cAnswered) {
+            w2cNext();
+        }
+    }
+
+    if (c2wView && c2wView.classList.contains('active')) {
+        if (e.key >= '1' && e.key <= '4' && !c2wAnswered) {
+            const idx = parseInt(e.key) - 1;
+            const options = document.querySelectorAll('#c2w-options .quiz-option');
+            if (options[idx]) options[idx].click();
+        }
+        if (e.key === 'Enter' && c2wAnswered) {
+            c2wNext();
+        }
+    }
+});
 
 </script>
 
