@@ -843,7 +843,7 @@ async function loadVocabData() {
   // file协议下fetch会被CORS阻止，直接跳过
   if (!isFileProtocol) {
     try {
-      const resp = await fetch('vocab_data.json', { cache: 'no-cache' });
+      const resp = await fetch('./vocab_data.json', { cache: 'no-cache' });
       if (resp.ok) {
         VOCAB_DATA = await resp.json();
         console.log('✅ 词库数据加载成功 (fetch)');
