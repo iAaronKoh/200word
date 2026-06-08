@@ -83,15 +83,8 @@ body {
   font-size: 20px;
   font-weight: 700;
   background: linear-gradient(135deg, var(--primary-light), var(--accent));
-  /* 修改 .logo 和 .hero h1 等涉及渐变文字的样式块 */
-  
-
-  
-  /* 同样修复 .hero h1 */
-
-  
-  /* 同样修复 .stat-number */
-
+  -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -195,13 +188,8 @@ body {
   font-size: 36px;
   font-weight: 800;
   background: linear-gradient(135deg, var(--primary), var(--accent));
-  /* 示例修复：针对 .logo, .hero h1, .stat-number 等所有涉及文字渐变的类 */
-  
-
-  
-
-  
-
+  -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -653,9 +641,10 @@ body {
   color: var(--text-muted);
   line-height: 1.6;
   display: -webkit-box;
-
   -webkit-box-orient: vertical;
   overflow: hidden;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .browse-card-words {
