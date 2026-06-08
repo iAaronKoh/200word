@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>词根词缀记忆大师</title>
+<style>
+/* ===== 基础变量与重置 ===== */
+:root {
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
+  --secondary: #f59e0b;
+  --accent: #10b981;
+  --danger: #ef4444;
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --bg-elevated: #334155;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border: #334155;
+  --shadow: 0 20px 60px -15px rgba(0,0,0,0.5);
+  --shadow-sm: 0 4px 12px rgba(0,0,0,0.3);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ===== 背景动画 ===== */
+.bg-particles {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  width: 4px; height: 4px;
+  background: var(--primary);
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: float 15s infinite ease-in-out;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+  25% { transform: translateY(-100px) translateX(50px); opacity: 0.6; }
+  50% { transform: translateY(-50px) translateX(-30px); opacity: 0.2; }
+  75% { transform: translateY(-150px) translateX(20px); opacity: 0.5; }
+}
+
+/* ===== 导航栏 ===== */
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-light), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  -webkit-text-fill-color: white;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-tab {
+  padding: 8px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: var(--transition);
+  border: none;
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-tab:hover { color: var(--text); background: var(--bg-elevated); }
+.nav-tab.active {
+  color: var(--text);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+/* ===== 主内容区 ===== */
+.main-content {
+  position: relative;
+  z-index: 1;
+  padding-top: 80px;
+  min-height: 100vh;
+}
+
+/* ===== 视图容器 ===== */
+.view { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
+.view.active { display: block; animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== 首页 ===== */
+.hero {
+  text-align: center;
+  padding: 60px 20px 40px;
+}
+
+.hero h1 {
+  font-size: 48px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #fff, var(--primary-light), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+  font-size: 18px;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto 40px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  max-width: 800px;
+  margin: 0 auto 40px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  transition: var(--transition);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary);
+  box-shadow: var(--shadow);
+}
+
+.stat-number {
+  font-size: 36px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 40px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4);
+}
+
+.cta-button:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 15px 50px rgba(99, 102, 241, 0.5);
+}
+
+/* ===== 背单词页面 ===== */
+.study-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.study-title {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.progress-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.progress-bar {
+  width: 200px;
+  height: 8px;
+  background: var(--bg-elevated);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* 筛选器 */
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-label {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.filter-chip {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition);
+  user-select: none;
+}
+
+.filter-chip:hover { border-color: var(--primary-light); color: var(--text); }
+.filter-chip.active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border-color: transparent;
+}
+
+/* 单词卡片 */
+.card-container {
+  perspective: 1200px;
+  max-width: 600px;
+  margin: 0 auto;
+  min-height: 500px;
+}
+
+.word-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px;
+  position: relative;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+}
+
+.word-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.word-card.revealed { border-color: var(--primary-light); }
+
+.card-badge {
+  position: absolute;
+  top: 16px; right: 16px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-root { background: rgba(99, 102, 241, 0.2); color: var(--primary-light); }
+.badge-prefix { background: rgba(245, 158, 11, 0.2); color: var(--secondary); }
+.badge-suffix { background: rgba(16, 185, 129, 0.2); color: var(--accent); }
+
+.word-main {
+  text-align: center;
+  margin: 20px 0 30px;
+}
+
+.word-text {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 12px;
+  word-break: break-all;
+}
+
+.word-pronunciation {
+  font-size: 18px;
+  color: var(--text-muted);
+  font-family: 'Georgia', serif;
+  font-style: italic;
+}
+
+.word-pos {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* 词根标签 */
+.root-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(16,185,129,0.15));
+  border: 1px solid rgba(99,102,241,0.3);
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--primary-light);
+  margin-bottom: 20px;
+}
+
+/* 隐藏内容 */
+.hidden-content {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.word-card.revealed .hidden-content {
+  opacity: 1;
+  max-height: 1000px;
+}
+
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 24px 0;
+}
+
+.meaning-section h3 {
+  font-size: 14px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.meaning-text {
+  font-size: 22px;
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.decomposition {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
+  color: var(--primary-light);
+  border-left: 3px solid var(--primary);
+}
+
+.analysis-text {
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+
+.example-box {
+  background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(16,185,129,0.05));
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  margin-top: 16px;
+  border-left: 3px solid var(--accent);
+}
+
+.example-box .en {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+
+.example-box .cn {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* 操作按钮 */
+.action-bar {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-reveal {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+}
+
+.btn-reveal:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(99, 102, 241, 0.5); }
+
+.btn-know {
+  background: linear-gradient(135deg, var(--accent), #059669);
+  color: white;
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.3);
+}
+
+.btn-know:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(16, 185, 129, 0.4); }
+
+.btn-unknow {
+  background: linear-gradient(135deg, var(--danger), #dc2626);
+  color: white;
+  box-shadow: 0 8px 30px rgba(239, 68, 68, 0.3);
+}
+
+.btn-unknow:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(239, 68, 68, 0.4); }
+
+.btn-next {
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-next:hover { background: var(--border); }
+
+/* 键盘提示 */
+.keyboard-hints {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.kb-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.kb-key {
+  padding: 2px 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+/* 完成页面 */
+.complete-screen {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.complete-icon {
+  width: 100px; height: 100px;
+  background: linear-gradient(135deg, var(--accent), var(--primary));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50px;
+  margin: 0 auto 30px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(16, 185, 129, 0); }
+}
+
+.complete-title {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+.complete-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 500px;
+  margin: 30px auto;
+}
+
+.complete-stat {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 20px;
+  border: 1px solid var(--border);
+}
+
+.complete-stat .num {
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.complete-stat .label {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* 词库浏览 */
+.browse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.browse-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.browse-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.browse-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.browse-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-light);
+}
+
+.browse-card-count {
+  font-size: 12px;
+  color: var(--text-dim);
+  background: var(--bg-elevated);
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+
+.browse-card-desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.browse-card-words {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.word-chip {
+  padding: 3px 10px;
+  background: var(--bg);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 响应式 */
+@media (max-width: 640px) {
+  .hero h1 { font-size: 32px; }
+  .word-text { font-size: 28px; }
+  .card-container { padding: 0 10px; }
+  .word-card { padding: 24px; }
+  .action-btn { padding: 12px 24px; font-size: 14px; }
+  .nav-tab { padding: 6px 14px; font-size: 13px; }
+  .complete-stats { grid-template-columns: 1fr; }
+}
+
+/* 动画 */
+.slide-in { animation: slideIn 0.4s ease; }
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.shake { animation: shake 0.5s ease; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(10px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+.flip { animation: flip 0.6s ease; }
+@keyframes flip {
+  0% { transform: rotateY(0); }
+  50% { transform: rotateY(90deg); }
+  100% { transform: rotateY(0); }
+}
+</style>
+</head>
+<body>
+
+<!-- 背景粒子 -->
+<div class="bg-particles" id="particles"></div>
+
+<!-- 导航栏 -->
+<nav class="navbar">
+  <div class="logo">
+    <div class="logo-icon">📚</div>
+    <span>词根词缀记忆大师</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchView('home')">🏠 首页</button>
+    <button class="nav-tab" onclick="switchView('study')">🎯 背单词</button>
+    <button class="nav-tab" onclick="switchView('browse')">📖 词库</button>
+  </div>
+</nav>
+
+<!-- 主内容 -->
+<div class="main-content">
+
+  <!-- ===== 首页 ===== -->
+  <div class="view active" id="view-home">
+    <div class="hero">
+      <h1>掌握词根，征服词汇</h1>
+      <p>通过200个核心词根词缀，科学记忆1587个单词。从构词法出发，让背单词变得高效而有趣。</p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">100</div>
+          <div class="stat-label">核心词根</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">50</div>
+          <div class="stat-label">常用前缀</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">50</div>
+          <div class="stat-label">常用后缀</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">1587</div>
+          <div class="stat-label">覆盖单词</div>
+        </div>
+      </div>
+
+      <button class="cta-button" onclick="startStudy()">
+        <span>🚀</span> 开始背单词
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== 背单词 ===== -->
+  <div class="view" id="view-study">
+    <div class="study-header">
+      <div class="study-title">🎯 单词练习</div>
+      <div class="progress-info">
+        <span id="progress-text">1 / 20</span>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width: 5%"></div>
+        </div>
+        <span id="progress-percent">5%</span>
+      </div>
+    </div>
+
+    <!-- 筛选器 -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label">类型:</span>
+        <span class="filter-chip active" data-filter="all" onclick="setFilter('type', 'all')">全部</span>
+        <span class="filter-chip" data-filter="root" onclick="setFilter('type', 'root')">词根</span>
+        <span class="filter-chip" data-filter="prefix" onclick="setFilter('type', 'prefix')">前缀</span>
+        <span class="filter-chip" data-filter="suffix" onclick="setFilter('type', 'suffix')">后缀</span>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">难度:</span>
+        <span class="filter-chip active" data-filter="all-level" onclick="setFilter('level', 'all')">全部</span>
+        <span class="filter-chip" data-filter="example" onclick="setFilter('level', 'example')">示例词</span>
+        <span class="filter-chip" data-filter="expansion" onclick="setFilter('level', 'expansion')">扩展词</span>
+      </div>
+    </div>
+
+    <!-- 卡片区域 -->
+    <div class="card-container" id="card-container">
+      <div class="word-card" id="word-card">
+        <!-- 动态内容 -->
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="action-bar" id="action-bar">
+      <button class="action-btn btn-reveal" id="btn-reveal" onclick="revealCard()">
+        <span>👁</span> 显示释义
+      </button>
+    </div>
+
+    <div class="keyboard-hints">
+      <span class="kb-hint"><span class="kb-key">Space</span> 显示/隐藏</span>
+      <span class="kb-hint"><span class="kb-key">←</span> 上一个</span>
+      <span class="kb-hint"><span class="kb-key">→</span> 下一个</span>
+      <span class="kb-hint"><span class="kb-key">K</span> 认识</span>
+      <span class="kb-hint"><span class="kb-key">U</span> 不认识</span>
+    </div>
+  </div>
+
+  <!-- ===== 词库浏览 ===== -->
+  <div class="view" id="view-browse">
+    <div class="study-header">
+      <div class="study-title">📖 词库浏览</div>
+    </div>
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label">查看:</span>
+        <span class="filter-chip active" onclick="switchBrowse('roots')">词根</span>
+        <span class="filter-chip" onclick="switchBrowse('prefixes')">前缀</span>
+        <span class="filter-chip" onclick="switchBrowse('suffixes')">后缀</span>
+      </div>
+    </div>
+    <div class="browse-grid" id="browse-grid">
+      <!-- 动态内容 -->
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== 数据 =====
+let VOCAB_DATA = null;
+
+// 词库数据加载器 - 三重降级策略确保最大兼容性
+async function loadVocabData() {
+  const errors = [];
+
+  // 策略1: fetch API (现代浏览器 + http/https协议)
+  try {
+    const resp = await fetch('vocab_data.json', { cache: 'no-cache' });
+    if (resp.ok) {
+      VOCAB_DATA = await resp.json();
+      console.log('✅ 词库数据加载成功 (fetch)');
+      initApp();
+      return;
+    }
+    throw new Error(`HTTP ${resp.status}`);
+  } catch (e) {
+    errors.push(`fetch: ${e.message}`);
+  }
+
+  // 策略2: XMLHttpRequest (兼容旧浏览器，支持file协议)
+  try {
+    const data = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.overrideMimeType('application/json');
+      xhr.open('GET', 'vocab_data.json', true);
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200 || xhr.status === 0) {
+            try { resolve(JSON.parse(xhr.responseText)); }
+            catch(err) { reject(err); }
+          } else {
+            reject(new Error(`Status ${xhr.status}`));
+          }
+        }
+      };
+      xhr.onerror = () => reject(new Error('Network error'));
+      xhr.send();
+    });
+    VOCAB_DATA = data;
+    console.log('✅ 词库数据加载成功 (XHR)');
+    initApp();
+    return;
+  } catch (e) {
+    errors.push(`XHR: ${e.message}`);
+  }
+
+  // 策略3: 动态创建script标签加载JSONP风格 (终极fallback)
+  try {
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'vocab_data.json';
+      script.type = 'application/json';
+      script.onload = () => {
+        // 尝试从script标签内容读取
+        try {
+          const text = script.textContent || script.innerText;
+          if (text) {
+            VOCAB_DATA = JSON.parse(text);
+            console.log('✅ 词库数据加载成功 (Script tag)');
+            initApp();
+            resolve();
+          } else {
+            reject(new Error('Empty content'));
+          }
+        } catch(err) { reject(err); }
+      };
+      script.onerror = () => reject(new Error('Script load failed'));
+      document.head.appendChild(script);
+      // 超时处理
+      setTimeout(() => reject(new Error('Timeout')), 5000);
+    });
+    return;
+  } catch (e) {
+    errors.push(`Script: ${e.message}`);
+  }
+
+  // 全部失败 - 显示用户友好的错误页面
+  showLoadError(errors);
+}
+
+function showLoadError(errors) {
+  const isFileProtocol = location.protocol === 'file:';
+  document.body.innerHTML = `
+    <div style="text-align:center;padding:60px 20px;font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#0f172a;color:#f8fafc;min-height:100vh;">
+      <div style="font-size:60px;margin-bottom:20px;">⚠️</div>
+      <h2 style="margin-bottom:16px;font-size:28px;">数据加载失败</h2>
+      <p style="color:#94a3b8;max-width:500px;margin:0 auto 30px;line-height:1.8;font-size:16px;">
+        无法加载词库数据文件 <code style="background:#1e293b;padding:3px 8px;border-radius:4px;color:#f59e0b;">vocab_data.json</code>
+      </p>
+
+      ${isFileProtocol ? `
+      <div style="background:#1e293b;border-radius:16px;padding:24px;max-width:600px;margin:0 auto 24px;text-align:left;border:1px solid #334155;">
+        <p style="color:#f59e0b;font-weight:700;margin-bottom:16px;font-size:18px;">💡 检测到 file:// 协议</p>
+        <p style="color:#94a3b8;margin-bottom:16px;line-height:1.7;">
+          浏览器安全策略禁止通过 file:// 协议加载本地 JSON 文件。请使用以下任一方式：
+        </p>
+        <ol style="color:#cbd5e1;padding-left:20px;line-height:2.2;">
+          <li><strong>使用本地服务器</strong> (推荐)：<br>
+            <code style="background:#0f172a;padding:4px 10px;border-radius:6px;color:#10b981;font-size:14px;">npx serve .</code> 或 
+            <code style="background:#0f172a;padding:4px 10px;border-radius:6px;color:#10b981;font-size:14px;">python -m http.server</code>
+          </li>
+          <li><strong>使用 VS Code Live Server 插件</strong></li>
+          <li><strong>将文件上传到同一 Web 服务器</strong></li>
+        </ol>
+      </div>
+      ` : `
+      <div style="background:#1e293b;border-radius:16px;padding:24px;max-width:600px;margin:0 auto 24px;text-align:left;border:1px solid #334155;">
+        <p style="color:#f59e0b;font-weight:700;margin-bottom:12px;">💡 可能原因：</p>
+        <ul style="color:#94a3b8;padding-left:20px;line-height:2;">
+          <li>vocab_data.json 文件不存在或路径错误</li>
+          <li>服务器未配置正确的 MIME 类型 (application/json)</li>
+          <li>网络连接问题</li>
+        </ul>
+      </div>
+      `}
+
+      <details style="max-width:600px;margin:0 auto;text-align:left;color:#64748b;">
+        <summary style="cursor:pointer;padding:10px;background:#1e293b;border-radius:8px;font-size:14px;">查看技术详情</summary>
+        <pre style="background:#0f172a;padding:16px;border-radius:8px;margin-top:8px;font-size:12px;overflow-x:auto;line-height:1.6;">${errors.join('\n')}</pre>
+      </details>
+    </div>
+  `;
+}
+
+// 启动加载
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadVocabData);
+} else {
+  loadVocabData();
+}
+</script>
+
+</body>
+</html>
