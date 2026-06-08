@@ -38,6 +38,12 @@ body {
   line-height: 1.6;
 }
 
+/* 工具类 */
+.hidden { display: none !important; }
+
+/* 加载动画 */
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ===== 背景动画 ===== */
 .bg-particles {
   position: fixed;
@@ -137,6 +143,57 @@ body {
 .view { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
 .view.active { display: block; animation: fadeIn 0.4s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== 加载页 ===== */
+.loading-area {
+  text-align: center;
+}
+.loading-spinner {
+  width: 48px; height: 48px;
+  border: 4px solid var(--bg-elevated);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+.loading-text {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
+
+/* ===== 错误页 ===== */
+.loading-error {
+  text-align: center;
+}
+.loading-error h3 {
+  margin-bottom: 8px;
+  font-size: 1.25rem;
+}
+.loading-error p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+  line-height: 1.7;
+}
+.help-text {
+  background: var(--bg);
+  border-left: 4px solid var(--primary);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 16px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.7;
+  text-align: left;
+}
+.help-text code {
+  background: rgba(99,102,241,0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  color: var(--primary-light);
+  font-size: 0.8rem;
+}
 
 /* ===== 首页 ===== */
 .hero {
@@ -695,8 +752,29 @@ body {
   50% { transform: rotateY(90deg); }
   100% { transform: rotateY(0); }
 }
+
+/* Toast 提示 */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--primary);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 10px;
+  box-shadow: 0 10px 15px rgba(0,0,0,0.3);
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 1000;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 </style>
-<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -704,8 +782,40 @@ body {
 <!-- 背景粒子 -->
 <div class="bg-particles" id="particles"></div>
 
+<!-- 加载状态层 -->
+<div id="page-loading" style="position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;">
+  <div class="loading-area">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">正在加载词库...</div>
+  </div>
+</div>
+
+<!-- 错误状态层 -->
+<div id="page-error" class="hidden" style="position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div style="max-width:600px;width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:32px;">
+    <div class="loading-error">
+      <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+      <h3>词库加载失败</h3>
+      <p>无法读取 <code>vocab_data.json</code> 文件。请确保该文件与 HTML 文件位于同一目录。</p>
+      <div class="help-text">
+        <strong>词库文件格式要求：</strong><br>
+        文件名必须为 <code>vocab_data.json</code>，支持以下格式：<br><br>
+        <strong>数组格式：</strong><br>
+        <code>[{"word":"example","meaning":"示例","root":"ex-"}]</code><br><br>
+        <strong>对象格式：</strong><br>
+        <code>{"roots":{"cent-":"一百"},"words":[...]}</code><br><br>
+        • <code>word</code> / <code>meaning</code> 为推荐字段<br>
+        • <code>root</code>、<<code>etymology</code>、<<code>phonetic</code> 为可选字段
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button class="cta-button" style="padding:12px 32px;font-size:16px;" onclick="retryLoad()">🔄 重新加载</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 导航栏 -->
-<nav class="navbar">
+<<nav class="navbar" id="navbar">
   <div class="logo">
     <div class="logo-icon">📚</div>
     <span>词根词缀记忆大师</span>
@@ -718,29 +828,29 @@ body {
 </nav>
 
 <!-- 主内容 -->
-<div class="main-content">
+<div class="main-content" id="main-content">
 
   <!-- ===== 首页 ===== -->
   <div class="view active" id="view-home">
     <div class="hero">
       <h1>掌握词根，征服词汇</h1>
-      <p>通过200个核心词根词缀，科学记忆1587个单词。从构词法出发，让背单词变得高效而有趣。</p>
+      <p>通过核心词根词缀，科学记忆大量单词。从构词法出发，让背单词变得高效而有趣。</p>
 
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-number">100</div>
+          <div class="stat-number" id="stat-roots">0</div>
           <div class="stat-label">核心词根</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">50</div>
+          <div class="stat-number" id="stat-prefixes">0</div>
           <div class="stat-label">常用前缀</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">50</div>
+          <div class="stat-number" id="stat-suffixes">0</div>
           <div class="stat-label">常用后缀</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">1587</div>
+          <div class="stat-number" id="stat-words">0</div>
           <div class="stat-label">覆盖单词</div>
         </div>
       </div>
@@ -824,474 +934,418 @@ body {
 
 </div>
 
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <script>
-// ===== 数据与状态 =====
+// ===== 全局数据 =====
 let VOCAB_DATA = null;
-let currentView = 'home';
-let studyQueue = [];
-let currentIndex = 0;
-let isRevealed = false;
-let studyStats = { known: 0, unknown: 0, total: 0 };
-let currentFilters = { type: 'all', level: 'all' };
-let browseMode = 'roots';
 
-// ===== 数据加载 =====
+// ===== 加载逻辑（参考 index.html 实现） =====
 async function loadVocabData() {
-  const errors = [];
-  const isFileProtocol = location.protocol === 'file:';
-
-  // file协议下fetch会被CORS阻止，直接跳过
-  if (!isFileProtocol) {
+    showLoading();
     try {
-      const resp = await fetch('./vocab_data.json', { cache: 'no-cache' });
-      if (resp.ok) {
-        VOCAB_DATA = await resp.json();
-        console.log('✅ 词库数据加载成功 (fetch)');
-        initApp();
-        return;
-      }
-      throw new Error('HTTP ' + resp.status);
-    } catch (e) {
-      errors.push('fetch: ' + e.message);
-    }
-  }
-
-  // XHR兼容file协议
-  try {
-    const data = await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.overrideMimeType('application/json');
-      xhr.open('GET', 'vocab_data.json', true);
-      xhr.onreadystatechange = () => {
-        if (xhr.readyState === 4) {
-          if (xhr.status === 200 || (isFileProtocol && xhr.status === 0)) {
-            try {
-              if (!xhr.responseText) throw new Error('空响应');
-              resolve(JSON.parse(xhr.responseText));
-            } catch (err) {
-              reject(new Error('JSON解析失败: ' + err.message));
-            }
-          } else {
-            reject(new Error('HTTP状态 ' + xhr.status));
-          }
+        const response = await fetch('./vocab_data.json');
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
         }
-      };
-      xhr.onerror = () => reject(new Error('请求失败'));
-      xhr.send();
-    });
+        const data = await response.json();
+        if (!data || typeof data !== 'object') {
+            throw new Error('JSON 数据格式错误：应为对象或数组');
+        }
+        processVocabData(data);
+        enterApp();
+        showToast('成功加载词库数据');
+        return;
+    } catch (err) {
+        console.log('fetch 失败，尝试 XMLHttpRequest:', err.message);
+    }
+
+    try {
+        const data = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.overrideMimeType('application/json');
+            xhr.open('GET', './vocab_data.json', true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200 || xhr.status === 0) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            resolve(data);
+                        } catch (e) {
+                            reject(new Error('JSON 解析失败'));
+                        }
+                    } else {
+                        reject(new Error('XHR 状态 ' + xhr.status));
+                    }
+                }
+            };
+            xhr.onerror = () => reject(new Error('XHR 网络错误'));
+            xhr.send();
+        });
+
+        if (!data || typeof data !== 'object') {
+            throw new Error('JSON 数据格式错误：应为对象或数组');
+        }
+        processVocabData(data);
+        enterApp();
+        showToast('成功加载词库数据');
+        return;
+    } catch (err2) {
+        console.error('词库加载失败:', err2);
+        showLoadingError();
+    }
+}
+
+function processVocabData(data) {
     VOCAB_DATA = data;
-    console.log('✅ 词库数据加载成功 (XHR)');
-    initApp();
-    return;
-  } catch (e) {
-    errors.push('XHR: ' + e.message);
-  }
-
-  showLoadError(errors);
+    // 统一数据结构：无论传入数组还是对象，都转换为数组便于后续使用
+    if (!Array.isArray(VOCAB_DATA) && VOCAB_DATA.words) {
+        VOCAB_DATA = VOCAB_DATA.words;
+    }
 }
 
-function showLoadError(errors) {
-  const isFileProtocol = location.protocol === 'file:';
-  const container = document.querySelector('.main-content') || document.body;
-
-  const html = `
-    <div style="text-align:center;padding:60px 20px;">
-      <div style="font-size:60px;margin-bottom:20px;">⚠️</div>
-      <h2 style="margin-bottom:16px;font-size:28px;color:var(--text);">数据加载失败</h2>
-      <p style="color:var(--text-muted);max-width:500px;margin:0 auto 30px;line-height:1.8;font-size:16px;">
-        无法加载词库数据文件 <code style="background:var(--bg-card);padding:3px 8px;border-radius:4px;color:var(--secondary);">vocab_data.json</code>
-      </p>
-      ${isFileProtocol ? `
-      <div style="background:var(--bg-card);border-radius:16px;padding:24px;max-width:600px;margin:0 auto 24px;text-align:left;border:1px solid var(--border);">
-        <p style="color:var(--secondary);font-weight:700;margin-bottom:16px;font-size:18px;">💡 检测到 file:// 协议</p>
-        <p style="color:var(--text-muted);margin-bottom:16px;line-height:1.7;">
-          浏览器安全策略禁止通过 file:// 协议加载本地 JSON 文件。请使用以下任一方式：
-        </p>
-        <ol style="color:var(--text);padding-left:20px;line-height:2.2;">
-          <li><strong>使用本地服务器</strong> (推荐)：<br>
-            <code style="background:var(--bg);padding:4px 10px;border-radius:6px;color:var(--accent);font-size:14px;">npx serve .</code> 或
-            <code style="background:var(--bg);padding:4px 10px;border-radius:6px;color:var(--accent);font-size:14px;">python -m http.server</code>
-          </li>
-          <li><strong>使用 VS Code Live Server 插件</strong></li>
-          <li><strong>将文件上传到同一 Web 服务器</strong></li>
-        </ol>
-      </div>
-      ` : `
-      <div style="background:var(--bg-card);border-radius:16px;padding:24px;max-width:600px;margin:0 auto 24px;text-align:left;border:1px solid var(--border);">
-        <p style="color:var(--secondary);font-weight:700;margin-bottom:12px;">💡 可能原因：</p>
-        <ul style="color:var(--text-muted);padding-left:20px;line-height:2;">
-          <li>vocab_data.json 文件不存在或路径错误</li>
-          <li>服务器未配置正确的 MIME 类型 (application/json)</li>
-          <li>网络连接问题</li>
-        </ul>
-      </div>
-      `}
-      <details style="max-width:600px;margin:0 auto;text-align:left;color:var(--text-dim);">
-        <summary style="cursor:pointer;padding:10px;background:var(--bg-card);border-radius:8px;font-size:14px;">查看技术详情</summary>
-        <pre style="background:var(--bg);padding:16px;border-radius:8px;margin-top:8px;font-size:12px;overflow-x:auto;line-height:1.6;color:var(--text-muted);">${errors.join('\n')}</pre>
-      </details>
-    </div>
-  `;
-
-  container.innerHTML = html;
+function enterApp() {
+    document.getElementById('page-loading').classList.add('hidden');
+    document.getElementById('page-error').classList.add('hidden');
+    
+    // 如果用户原代码中定义了 initApp，优先调用它
+    if (typeof initApp === 'function') {
+        initApp();
+    } else {
+        defaultInitApp();
+    }
 }
 
-// ===== 初始化 =====
-function initApp() {
-  if (!VOCAB_DATA) return;
-  createParticles();
-  updateHeroStats();
-  renderBrowse();
-  bindKeyboard();
+function showLoading() {
+    document.getElementById('page-loading').classList.remove('hidden');
+    document.getElementById('page-error').classList.add('hidden');
 }
 
-function createParticles() {
-  const container = document.getElementById('particles');
-  if (!container) return;
-  container.innerHTML = '';
-  for (let i = 0; i < 30; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.top = Math.random() * 100 + '%';
-    p.style.animationDelay = Math.random() * 15 + 's';
-    p.style.animationDuration = (10 + Math.random() * 10) + 's';
-    container.appendChild(p);
-  }
+function showLoadingError() {
+    document.getElementById('page-loading').classList.add('hidden');
+    document.getElementById('page-error').classList.remove('hidden');
 }
 
-function updateHeroStats() {
-  const roots = (VOCAB_DATA.roots || []).length;
-  const prefixes = (VOCAB_DATA.prefixes || []).length;
-  const suffixes = (VOCAB_DATA.suffixes || []).length;
-  let totalWords = 0;
-  [...(VOCAB_DATA.roots || []), ...(VOCAB_DATA.prefixes || []), ...(VOCAB_DATA.suffixes || [])].forEach(item => {
-    totalWords += (item.words || []).length;
-  });
-  const statCards = document.querySelectorAll('.stat-number');
-  if (statCards[0]) statCards[0].textContent = roots;
-  if (statCards[1]) statCards[1].textContent = prefixes;
-  if (statCards[2]) statCards[2].textContent = suffixes;
-  if (statCards[3]) statCards[3].textContent = totalWords;
+function retryLoad() {
+    showLoading();
+    loadVocabData();
 }
 
-// ===== 视图切换 =====
-function switchView(viewId) {
-  currentView = viewId;
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  const target = document.getElementById('view-' + viewId);
-  if (target) target.classList.add('active');
-
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  const tabs = document.querySelectorAll('.nav-tab');
-  if (viewId === 'home' && tabs[0]) tabs[0].classList.add('active');
-  if (viewId === 'study' && tabs[1]) tabs[1].classList.add('active');
-  if (viewId === 'browse' && tabs[2]) tabs[2].classList.add('active');
+function showToast(message) {
+    const t = document.getElementById('toast');
+    t.textContent = message;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ===== 学习功能 =====
-function startStudy() {
-  generateStudyQueue();
-  if (studyQueue.length === 0) {
-    alert('当前筛选条件下没有单词');
-    return;
-  }
-  currentIndex = 0;
-  isRevealed = false;
-  studyStats = { known: 0, unknown: 0, total: studyQueue.length };
-  switchView('study');
-  showWord(0);
-  updateProgress();
+// ===== 默认初始化（如果用户原代码未提供 initApp） =====
+function defaultInitApp() {
+    // 统计
+    let totalRoots = 0, totalPrefixes = 0, totalSuffixes = 0, totalWords = 0;
+    
+    if (Array.isArray(VOCAB_DATA)) {
+        totalWords = VOCAB_DATA.length;
+        const roots = new Set();
+        const prefixes = new Set();
+        const suffixes = new Set();
+        VOCAB_DATA.forEach(item => {
+            if (item.root) roots.add(item.root);
+            if (item.prefix) prefixes.add(item.prefix);
+            if (item.suffix) suffixes.add(item.suffix);
+            if (item.type === 'root') roots.add(item.name || item.root);
+            if (item.type === 'prefix') prefixes.add(item.name || item.prefix);
+            if (item.type === 'suffix') suffixes.add(item.name || item.suffix);
+        });
+        totalRoots = roots.size;
+        totalPrefixes = prefixes.size;
+        totalSuffixes = suffixes.size;
+    } else if (VOCAB_DATA && typeof VOCAB_DATA === 'object') {
+        if (VOCAB_DATA.roots) totalRoots = Object.keys(VOCAB_DATA.roots).length;
+        if (VOCAB_DATA.prefixes) totalPrefixes = Object.keys(VOCAB_DATA.prefixes).length;
+        if (VOCAB_DATA.suffixes) totalSuffixes = Object.keys(VOCAB_DATA.suffixes).length;
+        if (VOCAB_DATA.words) totalWords = VOCAB_DATA.words.length;
+    }
+    
+    const sRoots = document.getElementById('stat-roots');
+    const sPrefixes = document.getElementById('stat-prefixes');
+    const sSuffixes = document.getElementById('stat-suffixes');
+    const sWords = document.getElementById('stat-words');
+    if (sRoots) sRoots.textContent = totalRoots || 0;
+    if (sPrefixes) sPrefixes.textContent = totalPrefixes || 0;
+    if (sSuffixes) sSuffixes.textContent = totalSuffixes || 0;
+    if (sWords) sWords.textContent = totalWords || 0;
+    
+    // 默认渲染词库浏览页（roots）
+    renderBrowseRoots();
 }
 
-function generateStudyQueue() {
-  studyQueue = [];
-  const items = [
-    ...(VOCAB_DATA.roots || []),
-    ...(VOCAB_DATA.prefixes || []),
-    ...(VOCAB_DATA.suffixes || [])
-  ];
-
-  items.forEach(item => {
-    const type = item.type || (VOCAB_DATA.roots && VOCAB_DATA.roots.includes(item) ? 'root' :
-                                VOCAB_DATA.prefixes && VOCAB_DATA.prefixes.includes(item) ? 'prefix' : 'suffix');
-    (item.words || []).forEach(word => {
-      if (currentFilters.type !== 'all' && type !== currentFilters.type) return;
-      if (currentFilters.level !== 'all' && word.level !== currentFilters.level) return;
-
-      const w = typeof word === 'string' ? { word: word, name: word } : word;
-      studyQueue.push({
-        word: w.word || w.name || '',
-        name: w.name || w.word || '',
-        pronunciation: w.pronunciation || w.phonetic || '',
-        pos: w.pos || w.partOfSpeech || '',
-        meaning: w.meaning || w.definition || w.translation || '',
-        decomposition: w.decomposition || w.structure || '',
-        analysis: w.analysis || w.etymology || '',
-        example: w.example || w.sentence || '',
-        example_cn: w.example_cn || w.sentence_cn || w.translation || '',
-        _type: type,
-        _parent: item
-      });
+// ===== 视图与功能函数 =====
+function switchView(viewName) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const target = document.getElementById('view-' + viewName);
+    if (target) target.classList.add('active');
+    
+    document.querySelectorAll('.nav-tab').forEach((tab, idx) => {
+        tab.classList.remove('active');
+        const map = ['home', 'study', 'browse'];
+        if (map[idx] === viewName) tab.classList.add('active');
     });
-  });
-
-  studyQueue.sort(() => Math.random() - 0.5);
-  if (studyQueue.length > 20) studyQueue = studyQueue.slice(0, 20);
 }
 
-function showWord(index) {
-  if (index < 0 || index >= studyQueue.length) return;
-  const word = studyQueue[index];
-  const card = document.getElementById('word-card');
-  if (!card) return;
+// 学习模式
+let studyWords = [];
+let studyIndex = 0;
+let studyRevealed = false;
+let currentFilters = { type: 'all', level: 'all' };
 
-  const typeLabels = { root: '词根', prefix: '前缀', suffix: '后缀' };
-  const badgeClass = { root: 'badge-root', prefix: 'badge-prefix', suffix: 'badge-suffix' };
-
-  card.classList.remove('revealed');
-  isRevealed = false;
-
-  card.innerHTML = `
-    <span class="card-badge ${badgeClass[word._type] || 'badge-root'}">${typeLabels[word._type] || '词根'}</span>
-    <div class="word-main">
-      <div class="word-text">${escapeHtml(word.word || word.name || '')}</div>
-      <div class="word-pronunciation">${escapeHtml(word.pronunciation || '')}</div>
-      ${word.pos ? `<span class="word-pos">${escapeHtml(word.pos)}</span>` : ''}
-    </div>
-    <div class="root-tag">🔤 ${escapeHtml(word._parent?.name || '')} — ${escapeHtml(word._parent?.meaning || '')}</div>
-    <div class="hidden-content">
-      <div class="divider"></div>
-      <div class="meaning-section">
-        <h3>释义</h3>
-        <div class="meaning-text">${escapeHtml(word.meaning || '')}</div>
-      </div>
-      ${word.decomposition ? `<div class="decomposition">${escapeHtml(word.decomposition)}</div>` : ''}
-      ${word.analysis ? `<div class="analysis-text">${escapeHtml(word.analysis)}</div>` : ''}
-      ${word.example ? `
-      <div class="example-box">
-        <div class="en">${escapeHtml(word.example)}</div>
-        ${word.example_cn ? `<div class="cn">${escapeHtml(word.example_cn)}</div>` : ''}
-      </div>` : ''}
-    </div>
-  `;
-
-  updateActionButtons();
+function startStudy() {
+    if (!VOCAB_DATA || !Array.isArray(VOCAB_DATA) || VOCAB_DATA.length === 0) {
+        showToast('词库尚未加载或为空');
+        return;
+    }
+    switchView('study');
+    prepareStudyWords();
+    showStudyCard();
 }
 
-function escapeHtml(text) {
-  if (!text) return '';
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+function prepareStudyWords() {
+    let pool = [...VOCAB_DATA];
+    // 简单筛选
+    if (currentFilters.type !== 'all') {
+        pool = pool.filter(item => (item.type || '').toLowerCase() === currentFilters.type);
+    }
+    if (pool.length === 0) pool = [...VOCAB_DATA];
+    studyWords = shuffle(pool).slice(0, Math.min(pool.length, 20));
+    studyIndex = 0;
+    studyRevealed = false;
+}
+
+function showStudyCard() {
+    const card = document.getElementById('word-card');
+    const q = studyWords[studyIndex];
+    if (!q || !card) return;
+    
+    const total = studyWords.length;
+    const current = studyIndex + 1;
+    document.getElementById('progress-text').textContent = current + ' / ' + total;
+    document.getElementById('progress-percent').textContent = Math.round((current / total) * 100) + '%';
+    document.getElementById('progress-fill').style.width = (current / total) * 100 + '%';
+    
+    const type = (q.type || 'root').toLowerCase();
+    const badgeClass = type === 'prefix' ? 'badge-prefix' : type === 'suffix' ? 'badge-suffix' : 'badge-root';
+    const badgeText = type === 'prefix' ? 'PREFIX' : type === 'suffix' ? 'SUFFIX' : 'ROOT';
+    
+    card.className = 'word-card';
+    card.innerHTML = `
+        <div class="card-badge ${badgeClass}">${badgeText}</div>
+        <div class="word-main">
+            <div class="word-text">${esc(q.word || q.name || '')}</div>
+            <div class="word-pronunciation">${esc(q.phonetic || q.pronunciation || '')}</div>
+            <div class="word-pos">${esc(q.pos || '')}</div>
+        </div>
+        <div class="root-tag">📌 ${esc(q.root || q.name || '')}</div>
+        <div class="hidden-content">
+            <div class="divider"></div>
+            <div class="meaning-section">
+                <h3>释义</h3>
+                <div class="meaning-text">${esc(q.meaning || '')}</div>
+            </div>
+            ${q.etymology ? `<div class="decomposition">${esc(q.etymology)}</div>` : ''}
+            ${q.explanation ? `<div class="analysis-text">${esc(q.explanation)}</div>` : ''}
+            ${q.sentence ? `<div class="example-box"><div class="en">${esc(q.sentence)}</div></div>` : ''}
+        </div>
+    `;
+    
+    const actionBar = document.getElementById('action-bar');
+    actionBar.innerHTML = `<button class="action-btn btn-reveal" onclick="revealCard()"><span>👁</span> 显示释义</button>`;
 }
 
 function revealCard() {
-  const card = document.getElementById('word-card');
-  if (!card) return;
-  card.classList.add('revealed');
-  isRevealed = true;
-  updateActionButtons();
-}
-
-function updateActionButtons() {
-  const bar = document.getElementById('action-bar');
-  if (!bar) return;
-
-  if (!isRevealed) {
-    bar.innerHTML = `<button class="action-btn btn-reveal" onclick="revealCard()"><span>👁</span> 显示释义</button>`;
-  } else {
-    bar.innerHTML = `
-      <button class="action-btn btn-unknow" onclick="markUnknown()"><span>❌</span> 不认识</button>
-      <button class="action-btn btn-know" onclick="markKnown()"><span>✅</span> 认识</button>
-      <button class="action-btn btn-next" onclick="nextWord()"><span>⏭</span> 下一个</button>
+    const card = document.getElementById('word-card');
+    if (card) card.classList.add('revealed');
+    studyRevealed = true;
+    const actionBar = document.getElementById('action-bar');
+    actionBar.innerHTML = `
+        <button class="action-btn btn-unknow" onclick="markStudy(false)"><span>🤔</span> 不认识</button>
+        <button class="action-btn btn-know" onclick="markStudy(true)"><span>✅</span> 认识</button>
     `;
-  }
 }
 
-function markKnown() {
-  studyStats.known++;
-  nextWord();
+function markStudy(known) {
+    studyIndex++;
+    if (studyIndex >= studyWords.length) {
+        showStudyComplete();
+    } else {
+        studyRevealed = false;
+        showStudyCard();
+    }
 }
 
-function markUnknown() {
-  studyStats.unknown++;
-  nextWord();
+function showStudyComplete() {
+    const container = document.getElementById('card-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="complete-screen">
+                <div class="complete-icon">🎉</div>
+                <div class="complete-title">练习完成！</div>
+                <div class="complete-stats">
+                    <div class="complete-stat"><div class="num">${studyWords.length}</div><div class="label">总单词</div></div>
+                </div>
+                <button class="cta-button" onclick="startStudy()">再来一组</button>
+                <button class="cta-button" style="margin-top:12px;background:var(--bg-elevated);color:var(--text);" onclick="switchView('home')">返回首页</button>
+            </div>
+        `;
+    }
+    document.getElementById('action-bar').innerHTML = '';
 }
 
-function nextWord() {
-  if (currentIndex < studyQueue.length - 1) {
-    currentIndex++;
-    showWord(currentIndex);
-    updateProgress();
-  } else {
-    showComplete();
-  }
-}
-
-function prevWord() {
-  if (currentIndex > 0) {
-    currentIndex--;
-    showWord(currentIndex);
-    updateProgress();
-  }
-}
-
-function updateProgress() {
-  const text = document.getElementById('progress-text');
-  const fill = document.getElementById('progress-fill');
-  const percent = document.getElementById('progress-percent');
-  const total = studyQueue.length;
-  const current = currentIndex + 1;
-  const p = total > 0 ? Math.round((current / total) * 100) : 0;
-
-  if (text) text.textContent = current + ' / ' + total;
-  if (fill) fill.style.width = p + '%';
-  if (percent) percent.textContent = p + '%';
-}
-
-function showComplete() {
-  const card = document.getElementById('word-card');
-  if (!card) return;
-
-  card.classList.add('revealed');
-  card.innerHTML = `
-    <div class="complete-screen">
-      <div class="complete-icon">🎉</div>
-      <div class="complete-title">练习完成！</div>
-      <div class="complete-stats">
-        <div class="complete-stat">
-          <div class="num" style="color:var(--accent);">${studyStats.known}</div>
-          <div class="label">已掌握</div>
-        </div>
-        <div class="complete-stat">
-          <div class="num" style="color:var(--danger);">${studyStats.unknown}</div>
-          <div class="label">需复习</div>
-        </div>
-        <div class="complete-stat">
-          <div class="num" style="color:var(--primary);">${studyStats.total}</div>
-          <div class="label">总单词</div>
-        </div>
-      </div>
-      <button class="cta-button" onclick="startStudy()" style="margin-top:20px;"><span>🔄</span> 再来一轮</button>
-      <button class="cta-button" onclick="switchView('home')" style="margin-top:12px;background:var(--bg-elevated);"><span>🏠</span> 返回首页</button>
-    </div>
-  `;
-
-  const bar = document.getElementById('action-bar');
-  if (bar) bar.innerHTML = '';
-}
-
-// ===== 筛选器 =====
-function setFilter(type, value) {
-  if (type === 'type') currentFilters.type = value;
-  if (type === 'level') currentFilters.level = value;
-
-  document.querySelectorAll('.filter-group').forEach(group => {
-    const label = group.querySelector('.filter-label')?.textContent || '';
-    const isTypeGroup = label.includes('类型');
-    const isLevelGroup = label.includes('难度');
-
-    group.querySelectorAll('.filter-chip').forEach(chip => {
-      chip.classList.remove('active');
-      const filterValue = chip.getAttribute('data-filter');
-
-      if (isTypeGroup && type === 'type') {
-        if (value === 'all' && filterValue === 'all') chip.classList.add('active');
-        if (value === 'root' && filterValue === 'root') chip.classList.add('active');
-        if (value === 'prefix' && filterValue === 'prefix') chip.classList.add('active');
-        if (value === 'suffix' && filterValue === 'suffix') chip.classList.add('active');
-      }
-      if (isLevelGroup && type === 'level') {
-        if (value === 'all' && filterValue === 'all-level') chip.classList.add('active');
-        if (value === 'example' && filterValue === 'example') chip.classList.add('active');
-        if (value === 'expansion' && filterValue === 'expansion') chip.classList.add('active');
-      }
+// 筛选器
+function setFilter(category, value) {
+    if (category === 'type') currentFilters.type = value;
+    if (category === 'level') currentFilters.level = value;
+    
+    // 更新 UI active 状态
+    const groups = document.querySelectorAll('.filter-group');
+    groups.forEach(g => {
+        const chips = g.querySelectorAll('.filter-chip');
+        chips.forEach(chip => {
+            const filterVal = chip.getAttribute('onclick');
+            const isMatch = filterVal && filterVal.includes("'" + value + "'");
+            const isAll = filterVal && filterVal.includes("'all'") && value === 'all';
+            if ((isMatch && value !== 'all') || (isAll && value === 'all')) {
+                // 需要更精确匹配，这里简化：只处理当前点击的 chip
+            }
+        });
     });
-  });
-
-  if (currentView === 'study') {
-    startStudy();
-  }
+    
+    // 简化：直接重新渲染当前点击的 chip 样式（通过事件委托更好，但这里保持简单）
+    event.target.classList.add('active');
+    const siblings = event.target.parentElement.querySelectorAll('.filter-chip');
+    siblings.forEach(s => {
+        if (s !== event.target) s.classList.remove('active');
+    });
 }
 
-// ===== 浏览功能 =====
+// 浏览页
 function switchBrowse(type) {
-  browseMode = type;
-  const chips = document.querySelectorAll('#view-browse .filter-chip');
-  chips.forEach((chip, idx) => {
-    chip.classList.remove('active');
-    if ((type === 'roots' && idx === 0) || (type === 'prefixes' && idx === 1) || (type === 'suffixes' && idx === 2)) {
-      chip.classList.add('active');
+    // 更新 chip 样式
+    const chips = event.target.parentElement.querySelectorAll('.filter-chip');
+    chips.forEach(c => c.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    if (type === 'roots') renderBrowseRoots();
+    else if (type === 'prefixes') renderBrowseByType('prefix');
+    else if (type === 'suffixes') renderBrowseByType('suffix');
+}
+
+function renderBrowseRoots() {
+    const grid = document.getElementById('browse-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    
+    let items = [];
+    if (Array.isArray(VOCAB_DATA)) {
+        items = VOCAB_DATA.filter(item => item.type === 'root' || item.root);
+    } else if (VOCAB_DATA && VOCAB_DATA.roots) {
+        items = Object.entries(VOCAB_DATA.roots).map(([key, val]) => ({
+            name: key, meaning: val, words: []
+        }));
     }
-  });
-  renderBrowse();
+    
+    if (items.length === 0) {
+        grid.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">暂无词根数据</div>';
+        return;
+    }
+    
+    items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'browse-card';
+        const title = item.name || item.root || item.word || '未知';
+        const desc = item.meaning || item.description || item.desc || '';
+        const words = item.words || item.examples || [];
+        card.innerHTML = `
+            <div class="browse-card-header">
+                <div class="browse-card-title">${esc(title)}</div>
+                <div class="browse-card-count">${words.length} 词</div>
+            </div>
+            <div class="browse-card-desc">${esc(desc)}</div>
+            <div class="browse-card-words">
+                ${words.slice(0, 5).map(w => `<span class="word-chip">${esc(typeof w === 'string' ? w : (w.word || ''))}</span>`).join('')}
+            </div>
+        `;
+        grid.appendChild(card);
+    });
 }
 
-function renderBrowse() {
-  const grid = document.getElementById('browse-grid');
-  if (!grid || !VOCAB_DATA) return;
-
-  const items = VOCAB_DATA[browseMode] || [];
-
-  grid.innerHTML = items.map(item => {
-    const words = (item.words || []).slice(0, 5).map(w => {
-      const wordText = typeof w === 'string' ? w : (w.word || w.name || '');
-      return `<span class="word-chip">${escapeHtml(wordText)}</span>`;
-    }).join('');
-
-    const count = (item.words || []).length;
-
-    return `
-      <div class="browse-card" onclick="startStudy()">
-        <div class="browse-card-header">
-          <div class="browse-card-title">${escapeHtml(item.name || '')}</div>
-          <div class="browse-card-count">${count} 词</div>
-        </div>
-        <div class="browse-card-desc">${escapeHtml(item.meaning || item.description || '')}</div>
-        <div class="browse-card-words">${words}${count > 5 ? '<span class="word-chip">...</span>' : ''}</div>
-      </div>
-    `;
-  }).join('');
+function renderBrowseByType(type) {
+    const grid = document.getElementById('browse-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    
+    let items = [];
+    if (Array.isArray(VOCAB_DATA)) {
+        items = VOCAB_DATA.filter(item => (item.type || '').toLowerCase() === type);
+    }
+    
+    if (items.length === 0) {
+        grid.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:40px;">暂无${type === 'prefix' ? '前缀' : '后缀'}数据</div>`;
+        return;
+    }
+    
+    items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'browse-card';
+        card.innerHTML = `
+            <div class="browse-card-header">
+                <div class="browse-card-title">${esc(item.name || item.word || item.prefix || item.suffix || '未知')}</div>
+            </div>
+            <div class="browse-card-desc">${esc(item.meaning || '')}</div>
+        `;
+        grid.appendChild(card);
+    });
 }
 
-// ===== 键盘绑定 =====
-function bindKeyboard() {
-  document.addEventListener('keydown', (e) => {
-    if (currentView !== 'study') return;
+// 工具函数
+function esc(text) {
+    if (!text) return '';
+    const d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+}
 
-    switch (e.key) {
-      case ' ':
-      case 'Enter':
+function shuffle(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+// 键盘快捷键
+document.addEventListener('keydown', (e) => {
+    const studyView = document.getElementById('view-study');
+    if (!studyView || !studyView.classList.contains('active')) return;
+    
+    if (e.code === 'Space') {
         e.preventDefault();
-        if (!isRevealed) revealCard();
-        break;
-      case 'ArrowLeft':
-        prevWord();
-        break;
-      case 'ArrowRight':
-        if (isRevealed) nextWord();
-        else revealCard();
-        break;
-      case 'k':
-      case 'K':
-        if (isRevealed) markKnown();
-        break;
-      case 'u':
-      case 'U':
-        if (isRevealed) markUnknown();
-        break;
+        if (!studyRevealed) revealCard();
     }
-  });
-}
+    if (e.key === 'k' || e.key === 'K') {
+        if (studyRevealed) markStudy(true);
+    }
+    if (e.key === 'u' || e.key === 'U') {
+        if (studyRevealed) markStudy(false);
+    }
+});
 
-// ===== 启动 =====
+// 启动加载
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', loadVocabData);
+    document.addEventListener('DOMContentLoaded', loadVocabData);
 } else {
-  loadVocabData();
+    loadVocabData();
 }
 </script>
-
 </body>
 </html>
